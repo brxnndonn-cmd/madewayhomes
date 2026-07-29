@@ -4,6 +4,7 @@ import { users, providerProfiles, providerServices, serviceAreas, providerImages
 import { eq, desc, like, and, sql } from 'drizzle-orm';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { notifyUser, getAllNotifications } from '../services/notifications';
+import { z } from 'zod';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -216,6 +217,21 @@ router.delete('/providers/:id', (req: Request, res: Response) => {
 });
 
 // ── PUT /api/admin/providers/:id ────────────────────────────────────
+const providerUpdateSchema = z.object({
+  business_name: z.string().min(1).max(200).optional(),
+  description: z.string().min(50).max(5000).optional(),
+  phone: z.string().min(1).max(30).optional(),
+  email: z.string().email().max(255).optional(),
+  website: z.string().max(500).optional().nullable(),
+  facebook: z.string().max(500).optional().nullable(),
+  instagram: z.string().max(500).optional().nullable(),
+  years_in_business: z.coerce.number().int().positive().optional().nullable(),
+  licensed: z.enum(['yes', 'no', 'not_applicable']).optional(),
+  insured: z.enum(['yes', 'no']).optional(),
+  license_number: z.string().max(100).optional().nullable(),
+  custom_other_service: z.string().max(200).optional().nullable(),
+});
+
 router.put('/providers/:id', (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
@@ -230,7 +246,15 @@ router.put('/providers/:id', (req: Request, res: Response) => {
       return;
     }
 
-    const { business_name, description, phone, email, website, facebook, instagram, years_in_business, licensed, insured, license_number, custom_other_service } = req.body;
+    // Validate request body
+    const parsed = providerUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0];
+      res.status(400).json({ error: firstError.message, field: firstError.path.join('.') });
+      return;
+    }
+
+    const { business_name, description, phone, email, website, facebook, instagram, years_in_business, licensed, insured, license_number, custom_other_service } = parsed.data;
 
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
     if (business_name !== undefined) updates.business_name = business_name;
