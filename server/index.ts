@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -39,7 +40,16 @@ const formLimiter = rateLimit({
   message: { error: 'Too many requests. Please try again later.' },
 });
 
+const adminLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+});
+
 // ── Middleware ──────────────────────────────────────────────────────
+app.use(helmet());
 app.use(cors({
   origin: isProduction ? false : (process.env.CLIENT_URL || 'http://localhost:5173'),
   credentials: true,
@@ -52,11 +62,11 @@ app.use(cookieParser());
 // Auth routes: 5 req/min per IP
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminLimiter, adminRoutes);
 // Public form routes: 10 req/min per IP
 app.use('/api', formLimiter, publicRoutes);
 app.use('/api/service-requests', formLimiter, requestRoutes);
-app.use('/api/providers', providerRoutes);
+app.use('/api/providers', formLimiter, providerRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Serve uploaded public files (credentials stored outside this tree)
