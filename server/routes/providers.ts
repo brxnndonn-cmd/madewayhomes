@@ -188,7 +188,7 @@ router.get('/me', requireAuth, (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error('GET /api/providers/me error:', err);
-    res.status(500).json({ error: 'Failed to fetch provider profile' });
+    res.status(500).json({ error: 'Unable to load your profile. Please try again.' });
   }
 });
 
@@ -488,7 +488,7 @@ router.get('/', (req: Request, res: Response) => {
     res.json({ providers });
   } catch (err: any) {
     console.error('GET /api/providers error:', err);
-    res.status(500).json({ error: 'Failed to fetch providers' });
+    res.status(500).json({ error: 'Unable to load providers. Please try again.' });
   }
 });
 
@@ -565,7 +565,7 @@ router.get('/:id', (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error('GET /api/providers/:id error:', err);
-    res.status(500).json({ error: 'Failed to fetch provider' });
+    res.status(500).json({ error: 'Unable to load this provider. Please try again.' });
   }
 });
 

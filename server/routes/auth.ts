@@ -103,12 +103,12 @@ router.post('/login', validateBody(loginSchema), async (req: Request, res: Respo
     }
 
     if (user.status === 'suspended') {
-      res.status(403).json({ error: 'This account has been suspended' });
+      res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
     if (user.status === 'deleted') {
-      res.status(403).json({ error: 'This account has been deleted' });
+      res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
