@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { apiFetch, getAuthToken } from '../lib/api';
+import { apiFetch, getAuthToken, setAuthToken, authApi } from '../lib/api';
 
 interface Category {
   id: number;
@@ -187,6 +187,25 @@ export default function RequestService() {
     setSubmitError('');
 
     try {
+      // ── Token refresh fallback ──────────────────────────────
+      // If the in-memory token was lost (page refresh) but we have a user
+      // from context (proving a valid cookie exists), refresh the token.
+      let token = getAuthToken();
+      if (!token && user) {
+        try {
+          console.log('[RequestService] Token missing but user present — refreshing via /me');
+          const meData = await authApi.me();
+          if (meData.token) {
+            setAuthToken(meData.token);
+            token = meData.token;
+            console.log('[RequestService] Token refreshed successfully');
+          }
+        } catch (refreshErr) {
+          console.warn('[RequestService] Token refresh failed:', refreshErr);
+          // Continue anyway — the cookie may still authenticate the request
+        }
+      }
+
       const body = new FormData();
       body.append('category_id', formData.category_id);
       body.append('city', formData.city.trim());
@@ -207,7 +226,6 @@ export default function RequestService() {
 
       // Use raw fetch for multipart/form-data (apiFetch forces application/json)
       const fetchHeaders: Record<string, string> = {};
-      const token = getAuthToken();
       if (token) {
         fetchHeaders['Authorization'] = `Bearer ${token}`;
       }
@@ -234,6 +252,11 @@ export default function RequestService() {
       });
       setSubmitState('success');
     } catch (err: any) {
+      console.error('[RequestService] Submit failed:', {
+        status: err.status,
+        message: err.data?.error || err.message,
+        field: err.data?.field,
+      });
       if (err.status === 401) {
         setSubmitState('login_required');
       } else {

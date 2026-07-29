@@ -35,6 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await authApi.me();
       setUser(data.user);
+      // Persist the fresh token returned by /me (survives page refresh)
+      if (data.token) {
+        setAuthToken(data.token);
+      }
     } catch (_) {
       setUser(null);
       setAuthToken(null);

@@ -1,17 +1,49 @@
 const API_BASE = '/api';
+const TOKEN_KEY = 'madewayhomes_auth_token';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+// ── In-memory token (fast access, survives the session) ───────────────
 let authToken: string | null = null;
+
+// Restore from localStorage on module load
+try {
+  const stored = localStorage.getItem(TOKEN_KEY);
+  if (stored) {
+    authToken = stored;
+  }
+} catch (_) {
+  // localStorage may be unavailable (SSR, privacy mode, etc.)
+}
 
 export function setAuthToken(token: string | null) {
   authToken = token;
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  } catch (_) {
+    // localStorage may be unavailable
+  }
 }
 
 export function getAuthToken(): string | null {
-  return authToken;
+  if (authToken) return authToken;
+  // Fall back to localStorage — handles page refresh
+  try {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (stored) {
+      authToken = stored;
+      return stored;
+    }
+  } catch (_) {
+    // localStorage may be unavailable
+  }
+  return null;
 }
 
 export async function apiFetch<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {

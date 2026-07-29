@@ -181,7 +181,10 @@ router.get('/me', requireAuth, (req: Request, res: Response) => {
     return;
   }
 
-  res.json({ user });
+  // Return a fresh token so the client can refresh after page reload
+  const token = signToken({ userId: user.id, email: user.email, role: user.role });
+
+  res.json({ user, token });
 });
 
 // ── POST /api/auth/forgot-password ─────────────────────────────────
