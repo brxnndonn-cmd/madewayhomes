@@ -439,7 +439,9 @@ router.get('/', (req: Request, res: Response) => {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const rows = sqlite.prepare(`
-      SELECT DISTINCT p.*
+      SELECT DISTINCT p.id, p.business_name, p.description, p.logo_url,
+        p.phone, p.email, p.website, p.facebook, p.instagram,
+        p.years_in_business, p.is_verified
       FROM provider_profiles p
       LEFT JOIN provider_services ps2 ON ps2.provider_id = p.id
       LEFT JOIN service_areas sa2 ON sa2.provider_id = p.id
@@ -464,11 +466,19 @@ router.get('/', (req: Request, res: Response) => {
         SELECT image_url FROM provider_images WHERE provider_id = ?
       `).all(p.id);
 
-      // Strip sensitive fields from public response
-      const { credential_document_path, ...safe } = p;
-
+      // Build explicit allowlist — only public fields
       return {
-        ...safe,
+        id: p.id,
+        business_name: p.business_name,
+        description: p.description,
+        logo_url: p.logo_url,
+        phone: p.phone,
+        email: p.email,
+        website: p.website,
+        facebook: p.facebook,
+        instagram: p.instagram,
+        years_in_business: p.years_in_business,
+        is_verified: p.is_verified,
         services,
         areas,
         images: images.map((img: any) => img.image_url),
@@ -532,12 +542,22 @@ router.get('/:id', (req: Request, res: Response) => {
       .where(eq(providerImages.provider_id, provider.id))
       .all();
 
-    // Strip sensitive fields from public response
-    const { credential_document_path, ...safeProvider } = provider;
+    // Build explicit allowlist — only public fields
+    const pub = provider as any;
 
     res.json({
       provider: {
-        ...safeProvider,
+        id: pub.id,
+        business_name: pub.business_name,
+        description: pub.description,
+        logo_url: pub.logo_url,
+        phone: pub.phone,
+        email: pub.email,
+        website: pub.website,
+        facebook: pub.facebook,
+        instagram: pub.instagram,
+        years_in_business: pub.years_in_business,
+        is_verified: pub.is_verified,
         services,
         areas,
         images: images.map((img) => img.image_url),

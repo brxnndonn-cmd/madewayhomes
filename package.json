@@ -13,7 +13,8 @@
     "db:migrate": "tsx server/db/migrate.ts",
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "seed": "tsx server/db/seed.ts",
-    "seed:clear": "tsx server/db/seed-clear.ts"
+    "seed:clear": "tsx server/db/seed-clear.ts",
+    "test": "NODE_ENV=production JWT_SECRET=test-secret-for-ci bun test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -95,10 +95,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 // ── Start Server ───────────────────────────────────────────────────
 runMigrations();
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 MadeWayHomes server running on http://0.0.0.0:${PORT}`);
   console.log(`   Environment: ${isProduction ? 'production' : 'development'}`);
   console.log(`   API: http://0.0.0.0:${PORT}/api`);
 });
 
+export { server };
 export default app;
