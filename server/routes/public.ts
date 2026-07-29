@@ -18,17 +18,25 @@ router.get('/providers/featured', (_req: Request, res: Response) => {
       email: providerProfiles.email,
       website: providerProfiles.website,
       years_in_business: providerProfiles.years_in_business,
-      approval_status: providerProfiles.approval_status,
     })
     .from(providerProfiles)
     .where(eq(providerProfiles.approval_status, 'published'))
     .limit(3)
     .all();
 
-    // Defense-in-depth: strip any sensitive fields that may leak
-    const sanitized = approved.map(({ credential_document_path, ...safe }: any) => safe);
+    // Build explicit allowlist — only public fields
+    const providers = approved.map(p => ({
+      id: p.id,
+      business_name: p.business_name,
+      description: p.description,
+      logo_url: p.logo_url,
+      phone: p.phone,
+      email: p.email,
+      website: p.website,
+      years_in_business: p.years_in_business,
+    }));
 
-    res.json({ providers: sanitized });
+    res.json({ providers });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch featured providers' });
   }

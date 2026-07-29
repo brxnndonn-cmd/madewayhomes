@@ -16,7 +16,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(1, 'Name is required'),
-  role: z.enum(['customer', 'provider', 'admin']).default('customer'),
+  role: z.enum(['customer', 'provider']).default('customer'),
   phone: z.string().optional(),
 });
 
@@ -44,15 +44,6 @@ router.post('/register', validateBody(registerSchema), async (req: Request, res:
     if (existing) {
       res.status(409).json({ error: 'A user with this email already exists' });
       return;
-    }
-
-    // Admin logic: first admin auto-approved, subsequent need existing admin
-    if (role === 'admin') {
-      const adminCount = db.select().from(users).where(eq(users.role, 'admin')).all();
-      if (adminCount.length > 0) {
-        res.status(403).json({ error: 'Admin registration requires an existing admin to create the account' });
-        return;
-      }
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
