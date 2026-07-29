@@ -331,17 +331,23 @@ export default function RequestService() {
 
   // ── Form Screen ────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-brand-gray py-8 sm:py-12">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* ── Page Header ──────────────────────────────────────── */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-brand-black mb-3">
+    <div>
+      {/* ── Page Header ──────────────────────────────────────── */}
+      <section className="page-header text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="section-badge !bg-white/20 !text-white">Get Started</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
             Request a Service
           </h1>
-          <p className="text-brand-gray-dark text-lg">
-            Tell us what you need and we'll connect you with local providers.
+          <p className="text-white/70 text-lg max-w-2xl mx-auto">
+            Tell us what you need and we'll connect you with the best local providers in Caldwell County.
           </p>
         </div>
+      </section>
+
+      {/* ── Form Body ──────────────────────────────────────── */}
+      <div className="bg-brand-gray py-8 sm:py-12">
+        <div className="max-w-2xl mx-auto px-4">
 
         {/* ── Login Prompt (if not authenticated) ──────────────── */}
         {!user && (
@@ -403,10 +409,29 @@ export default function RequestService() {
           </div>
         )}
 
+        {/* ── Step Indicator ────────────────────────────────── */}
+        <div className="flex items-center justify-center mb-8 px-2">
+          <div className="flex items-center gap-1 sm:gap-2 w-full max-w-md">
+            {['Service Details', 'Contact Info', 'Photos & Submit'].map((label, i) => (
+              <div key={label} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center">
+                  <div className={`step-dot step-dot-active text-xs`}>{i + 1}</div>
+                  <span className="text-[10px] sm:text-xs text-brand-gray-dark mt-1.5 font-medium whitespace-nowrap">{label}</span>
+                </div>
+                {i < 2 && <div className="step-line step-line-active mx-1 sm:mx-2 mb-5" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ── Form Card ─────────────────────────────────────────── */}
         <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           {/* 1. Service Category */}
           <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+              <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">1</div>
+              <h2 className="text-base font-bold text-brand-black">Service Details</h2>
+            </div>
             <label htmlFor="category_id" className={`block text-sm font-semibold mb-2 ${errors.category_id ? 'text-red-600' : 'text-brand-black'}`}>
               Service Category <span className="text-brand-red">*</span>
             </label>
@@ -530,7 +555,13 @@ export default function RequestService() {
             />
           </div>
 
-          {/* 6. Contact Preference */}
+          {/* 6. Contact Preference — Section Break */}
+          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100 pt-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">2</div>
+            <h2 className="text-base font-bold text-brand-black">Contact Info</h2>
+          </div>
+
+          {/* 6a. Contact Preference */}
           <div className="mb-6">
             <label className="block text-sm font-semibold mb-3 text-brand-black">
               Contact Preference
@@ -620,7 +651,13 @@ export default function RequestService() {
             )}
           </div>
 
-          {/* 10. Upload Photos */}
+          {/* 10. Upload Photos — Section Break */}
+          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100 pt-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-black/10 flex items-center justify-center text-brand-black text-xs font-bold">3</div>
+            <h2 className="text-base font-bold text-brand-black">Photos &amp; Submit</h2>
+          </div>
+
+          {/* 10a. Upload Photos */}
           <div className="mb-6">
             <label className="block text-sm font-semibold mb-2 text-brand-black">
               Upload Photos <span className="text-brand-gray-medium font-normal">(optional)</span>
@@ -655,7 +692,7 @@ export default function RequestService() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-brand-gray-dark hover:border-brand-red hover:text-brand-red transition-colors text-sm"
+                className="flex items-center gap-2 px-5 py-4 border-2 border-dashed border-gray-300 rounded-xl text-brand-gray-dark hover:border-brand-red hover:text-brand-red hover:bg-red-50/30 transition-all text-sm w-full justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -736,6 +773,7 @@ export default function RequestService() {
           </p>
         </form>
       </div>
+    </div>
     </div>
   );
 }

@@ -78,19 +78,19 @@ interface Stats {
 // ── Status Badge ─────────────────────────────────────────────────────
 
 const statusColors: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800',
-  matched: 'bg-yellow-100 text-yellow-800',
-  in_progress: 'bg-orange-100 text-orange-800',
-  completed: 'bg-green-100 text-green-800',
-  canceled: 'bg-red-100 text-red-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
+  new: 'tag tag-red',
+  matched: 'tag tag-gold',
+  in_progress: 'tag bg-orange-100 text-orange-700 border-orange-200',
+  completed: 'tag bg-green-100 text-green-700 border-green-200',
+  canceled: 'tag bg-red-100 text-red-700 border-red-200',
+  pending: 'tag tag-gold',
+  approved: 'tag bg-green-100 text-green-700 border-green-200',
+  rejected: 'tag bg-red-100 text-red-700 border-red-200',
 };
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-100 text-gray-800'}`}>
+    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${statusColors[status] || 'tag tag-gray'}`}>
       {status.replace('_', ' ')}
     </span>
   );
@@ -376,8 +376,22 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-brand-black mb-6">Admin Dashboard</h1>
+    <div>
+      {/* ── Admin Header Banner ─────────────────────────────────── */}
+      <section className="hero-dark-gradient py-10 sm:py-14 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-white text-lg">⚙️</div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Admin Dashboard</h1>
+              <p className="text-white/50 text-sm">Manage requests, providers, and platform activity</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Main Content ────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
       {/* Toast */}
       {toast && (
@@ -389,26 +403,30 @@ export default function AdminDashboard() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6 overflow-x-auto">
-        <nav className="flex space-x-6 min-w-max">
+      <div className="border-b-2 border-gray-200 mb-6 overflow-x-auto">
+        <nav className="flex space-x-1 min-w-max">
           {tabs.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg -mb-0.5 ${
                 tab === t.key
-                  ? 'border-brand-red text-brand-red'
-                  : 'border-transparent text-brand-gray-dark hover:text-brand-black hover:border-gray-300'
+                  ? 'border-brand-red text-brand-red bg-red-50/50'
+                  : 'border-transparent text-brand-gray-dark hover:text-brand-black hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
               {t.label}
               {t.key === 'requests' && requests.length > 0 && (
-                <span className="ml-1.5 bg-brand-gray text-brand-gray-dark text-xs px-1.5 py-0.5 rounded-full">
+                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                  tab === t.key ? 'bg-brand-red/10 text-brand-red' : 'bg-gray-100 text-brand-gray-dark'
+                }`}>
                   {requests.length}
                 </span>
               )}
               {t.key === 'providers' && pendingProviders.length > 0 && (
-                <span className="ml-1.5 bg-yellow-100 text-yellow-800 text-xs px-1.5 py-0.5 rounded-full">
+                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                  tab === t.key ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-brand-gray-dark'
+                }`}>
                   {pendingProviders.length}
                 </span>
               )}
@@ -422,18 +440,18 @@ export default function AdminDashboard() {
         <div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-            <StatCard label="Total Requests" value={requests.length} />
-            <StatCard label="Total Providers" value={stats.totalProviders} />
-            <StatCard label="Pending Providers" value={stats.pendingProviders} highlight />
-            <StatCard label="Total Customers" value={stats.totalCustomers} />
+            <StatCard label="Total Requests" value={requests.length} icon="📋" borderColor="#3B82F6" />
+            <StatCard label="Total Providers" value={stats.totalProviders} icon="🏢" borderColor="#10B981" />
+            <StatCard label="Pending Providers" value={stats.pendingProviders} icon="⏳" borderColor="#C8963E" />
+            <StatCard label="Total Customers" value={stats.totalCustomers} icon="👥" borderColor="#9B1B30" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Requests */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="card p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-brand-black">Recent Requests</h2>
-                <button onClick={() => setTab('requests')} className="text-sm text-brand-red hover:text-brand-red-dark font-medium">
+                <h2 className="text-lg font-bold text-brand-black">Recent Requests</h2>
+                <button onClick={() => setTab('requests')} className="text-sm text-brand-red hover:text-brand-red-dark font-semibold transition-colors">
                   View all →
                 </button>
               </div>
@@ -443,28 +461,28 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-brand-gray-dark border-b border-gray-100">
-                        <th className="pb-2 font-medium">ID</th>
-                        <th className="pb-2 font-medium">Category</th>
-                        <th className="pb-2 font-medium">City</th>
-                        <th className="pb-2 font-medium">Customer</th>
-                        <th className="pb-2 font-medium">Status</th>
-                        <th className="pb-2 font-medium">Date</th>
+                      <tr className="text-left bg-brand-gray border-b-2 border-gray-100">
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">ID</th>
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Category</th>
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">City</th>
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Customer</th>
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Status</th>
+                        <th className="pb-2.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {requests.slice(0, 5).map(r => (
                         <tr
                           key={r.id}
-                          className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                          className="border-b border-gray-100 hover:bg-gray-50/80 cursor-pointer transition-colors"
                           onClick={() => { setTab('requests'); setExpandedRequest(r.id); }}
                         >
-                          <td className="py-2 pr-2 font-medium text-brand-black">{r.display_id}</td>
-                          <td className="py-2 pr-2">{r.category_name}</td>
-                          <td className="py-2 pr-2">{r.city}</td>
-                          <td className="py-2 pr-2">{r.customer_name}</td>
-                          <td className="py-2 pr-2"><StatusBadge status={r.status} /></td>
-                          <td className="py-2 text-brand-gray-dark whitespace-nowrap">{formatDate(r.created_at)}</td>
+                          <td className="py-2.5 pr-2 font-semibold text-brand-black">{r.display_id}</td>
+                          <td className="py-2.5 pr-2">{r.category_name}</td>
+                          <td className="py-2.5 pr-2">{r.city}</td>
+                          <td className="py-2.5 pr-2">{r.customer_name}</td>
+                          <td className="py-2.5 pr-2"><StatusBadge status={r.status} /></td>
+                          <td className="py-2.5 text-brand-gray-dark whitespace-nowrap">{formatDate(r.created_at)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -474,10 +492,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Pending Providers */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="card p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-brand-black">Pending Providers</h2>
-                <button onClick={() => setTab('providers')} className="text-sm text-brand-red hover:text-brand-red-dark font-medium">
+                <h2 className="text-lg font-bold text-brand-black">Pending Providers</h2>
+                <button onClick={() => setTab('providers')} className="text-sm text-brand-red hover:text-brand-red-dark font-semibold transition-colors">
                   View all →
                 </button>
               </div>
@@ -486,16 +504,16 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {pendingProviders.slice(0, 5).map(p => (
-                    <div key={p.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3">
+                    <div key={p.id} className="flex items-center justify-between border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-shadow">
                       <div>
-                        <p className="font-medium text-brand-black text-sm">{p.business_name}</p>
-                        <p className="text-xs text-brand-gray-dark">{p.user_email}</p>
+                        <p className="font-semibold text-brand-black text-sm">{p.business_name}</p>
+                        <p className="text-xs text-brand-gray-dark mt-0.5">{p.user_email}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); handleApprove(p.id); }} className="btn-primary text-xs px-3 py-1.5">
+                        <button onClick={(e) => { e.stopPropagation(); handleApprove(p.id); }} className="btn-primary text-xs !px-3 !py-1.5">
                           Approve
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleReject(p.id); }} className="btn-secondary text-xs px-3 py-1.5">
+                        <button onClick={(e) => { e.stopPropagation(); handleReject(p.id); }} className="btn-secondary text-xs !px-3 !py-1.5">
                           Reject
                         </button>
                       </div>
@@ -506,9 +524,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent Activity Feed */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:col-span-2">
+            <div className="card p-4 sm:p-6 lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-brand-black">Recent Activity</h2>
+                <h2 className="text-lg font-bold text-brand-black">Recent Activity</h2>
               </div>
               {recentNotifications.length === 0 ? (
                 <p className="text-brand-gray-dark text-sm">No recent activity.</p>
@@ -581,12 +599,12 @@ export default function AdminDashboard() {
               <p className="text-sm">Try adjusting your filters.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="card overflow-hidden">
               {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-brand-gray-dark bg-brand-gray border-b border-gray-200">
+                    <tr className="text-left bg-brand-gray border-b-2 border-gray-200">
                       {[
                         { key: 'display_id', label: 'ID' },
                         { key: 'category_name', label: 'Category' },
@@ -597,7 +615,7 @@ export default function AdminDashboard() {
                       ].map(col => (
                         <th
                           key={col.key}
-                          className="px-4 py-3 font-medium cursor-pointer hover:text-brand-black whitespace-nowrap"
+                          className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider cursor-pointer hover:text-brand-black transition-colors whitespace-nowrap"
                           onClick={() => sortBy(col.key, filteredRequests, reqSort, setReqSort)}
                         >
                           {col.label} {reqSort.key === col.key ? (reqSort.dir === 'asc' ? '↑' : '↓') : ''}
@@ -609,8 +627,8 @@ export default function AdminDashboard() {
                     {filteredRequests.map(r => (
                       <Fragment key={r.id}>
                         {/* Summary row */}
-                        <tr className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => handleExpandRequest(r.id)}>
-                          <td className="px-4 py-3 font-medium text-brand-black">{r.display_id}</td>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50/80 cursor-pointer transition-colors" onClick={() => handleExpandRequest(r.id)}>
+                          <td className="px-4 py-3 font-semibold text-brand-black">{r.display_id}</td>
                           <td className="px-4 py-3">{r.category_name}</td>
                           <td className="px-4 py-3">{r.city}</td>
                           <td className="px-4 py-3">{r.customer_name}</td>
@@ -620,7 +638,7 @@ export default function AdminDashboard() {
                         {/* Expanded details */}
                         {expandedRequest === r.id && (
                           <tr key={`exp-${r.id}`}>
-                            <td colSpan={6} className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                            <td colSpan={6} className="px-4 py-4 bg-gray-50/80 border-b border-gray-200">
                               <RequestDetails
                                 request={r}
                                 onUpdateStatus={(status) => handleUpdateRequest(r.id, { status })}
@@ -680,11 +698,11 @@ export default function AdminDashboard() {
               <p className="text-sm">Try adjusting your filters.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-brand-gray-dark bg-brand-gray border-b border-gray-200">
+                    <tr className="text-left bg-brand-gray border-b-2 border-gray-200">
                       {[
                         { key: 'business_name', label: 'Business Name' },
                         { key: 'user_name', label: 'Contact' },
@@ -694,20 +712,20 @@ export default function AdminDashboard() {
                       ].map(col => (
                         <th
                           key={col.key}
-                          className="px-4 py-3 font-medium cursor-pointer hover:text-brand-black whitespace-nowrap"
+                          className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider cursor-pointer hover:text-brand-black transition-colors whitespace-nowrap"
                           onClick={() => sortBy(col.key, filteredProviders, provSort, setProvSort)}
                         >
                           {col.label} {provSort.key === col.key ? (provSort.dir === 'asc' ? '↑' : '↓') : ''}
                         </th>
                       ))}
-                      <th className="px-4 py-3 font-medium">Actions</th>
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredProviders.map(p => (
                       <Fragment key={p.id}>
-                        <tr className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedProvider(expandedProvider === p.id ? null : p.id)}>
-                          <td className="px-4 py-3 font-medium text-brand-black">{p.business_name}</td>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50/80 cursor-pointer transition-colors" onClick={() => setExpandedProvider(expandedProvider === p.id ? null : p.id)}>
+                          <td className="px-4 py-3 font-semibold text-brand-black">{p.business_name}</td>
                           <td className="px-4 py-3">{p.user_name}</td>
                           <td className="px-4 py-3 text-brand-gray-dark">{p.user_email}</td>
                           <td className="px-4 py-3"><StatusBadge status={p.approval_status} /></td>
@@ -735,7 +753,7 @@ export default function AdminDashboard() {
                         </tr>
                         {expandedProvider === p.id && (
                           <tr key={`exp-p-${p.id}`}>
-                            <td colSpan={6} className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                            <td colSpan={6} className="px-4 py-4 bg-gray-50/80 border-b border-gray-200">
                               <ProviderDetails
                                 provider={p}
                                 editing={editingProvider === p.id}
@@ -766,23 +784,23 @@ export default function AdminDashboard() {
               <p className="text-sm">Contact form submissions will appear here.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-brand-gray-dark bg-brand-gray border-b border-gray-200">
-                      <th className="px-4 py-3 font-medium">Name</th>
-                      <th className="px-4 py-3 font-medium">Email</th>
-                      <th className="px-4 py-3 font-medium">Subject</th>
-                      <th className="px-4 py-3 font-medium">Message</th>
-                      <th className="px-4 py-3 font-medium">Date</th>
+                    <tr className="text-left bg-brand-gray border-b-2 border-gray-200">
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Name</th>
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Email</th>
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Subject</th>
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Message</th>
+                      <th className="px-4 py-3.5 text-xs font-semibold text-brand-gray-dark uppercase tracking-wider">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {messages.map(m => (
                       <Fragment key={m.id}>
-                        <tr className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedMessage(expandedMessage === m.id ? null : m.id)}>
-                          <td className="px-4 py-3 font-medium text-brand-black">{m.name}</td>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50/80 cursor-pointer transition-colors" onClick={() => setExpandedMessage(expandedMessage === m.id ? null : m.id)}>
+                          <td className="px-4 py-3 font-semibold text-brand-black">{m.name}</td>
                           <td className="px-4 py-3 text-brand-gray-dark">{m.email}</td>
                           <td className="px-4 py-3">{m.subject}</td>
                           <td className="px-4 py-3 text-brand-gray-dark max-w-xs truncate">{m.message}</td>
@@ -790,7 +808,7 @@ export default function AdminDashboard() {
                         </tr>
                         {expandedMessage === m.id && (
                           <tr key={`exp-m-${m.id}`}>
-                            <td colSpan={5} className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                            <td colSpan={5} className="px-4 py-4 bg-gray-50/80 border-b border-gray-200">
                               <div className="space-y-3">
                                 <div>
                                   <p className="text-xs font-medium text-brand-gray-dark uppercase">From</p>
@@ -818,17 +836,22 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
 
 // ── Sub-Components ────────────────────────────────────────────────────
 
-function StatCard({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function StatCard({ label, value, icon, borderColor }: { label: string; value: number; icon?: string; borderColor?: string }) {
   return (
-    <div className={`bg-white rounded-lg border p-4 ${highlight ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`}>
-      <p className="text-sm text-brand-gray-dark">{label}</p>
-      <p className={`text-2xl font-bold ${highlight ? 'text-yellow-700' : 'text-brand-black'}`}>{value}</p>
+    <div className={`bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow duration-200`}
+         style={borderColor ? { borderLeftWidth: '4px', borderLeftColor: borderColor } : undefined}>
+      <div className="flex items-center gap-3 mb-3">
+        {icon && <div className="w-10 h-10 rounded-lg bg-brand-red/10 flex items-center justify-center text-lg">{icon}</div>}
+        <p className="text-sm font-medium text-brand-gray-dark">{label}</p>
+      </div>
+      <p className="text-3xl font-extrabold text-brand-black">{value}</p>
     </div>
   );
 }

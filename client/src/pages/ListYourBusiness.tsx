@@ -304,18 +304,46 @@ export default function ListYourBusiness() {
   const hasExistingApp = apiError === 'You have already submitted a provider application.';
 
   return (
-    <div className="min-h-screen bg-brand-gray">
-      {/* ── Hero Header ─────────────────────────────────────────── */}
-      <div className="bg-brand-black text-white py-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
-            List Your Business on Made<span className="text-brand-red-light">Way</span>Homes
+    <div>
+      {/* ── Page Header ─────────────────────────────────────────── */}
+      <section className="page-header text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="section-badge !bg-white/20 !text-white">For Local Businesses</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
+            List Your Business on Made<span className="text-brand-gold">Way</span>Homes
           </h1>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-            Join our network of trusted local service providers in Caldwell County.
+          <p className="text-white/70 text-lg max-w-2xl mx-auto">
+            Join our network of trusted local service providers in Caldwell County and start receiving customer leads.
           </p>
         </div>
-      </div>
+      </section>
+
+      {/* ── Benefits Section ──────────────────────────────────── */}
+      <section className="bg-white py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="section-badge">Why Join</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-brand-black mb-3">Grow Your Business With Us</h2>
+            <p className="text-brand-gray-dark max-w-xl mx-auto">
+              MadeWayHomes connects you directly with homeowners and renters who need your services.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: '📈', title: 'More Leads', desc: 'Get matched with customers actively looking for your services in Caldwell County.' },
+              { icon: '🎯', title: 'Targeted Matches', desc: 'We only send you requests that match your services and service areas.' },
+              { icon: '🆓', title: 'Free to Join', desc: 'No upfront fees. Apply now and get listed once approved.' },
+              { icon: '🏆', title: 'Build Trust', desc: 'Showcase your work, collect reviews, and build a reputation in your community.' },
+            ].map((benefit) => (
+              <div key={benefit.title} className="card-hover-lift p-6 text-center">
+                <div className="icon-circle-red mx-auto mb-4 text-2xl">{benefit.icon}</div>
+                <h3 className="font-bold text-brand-black mb-2">{benefit.title}</h3>
+                <p className="text-sm text-brand-gray-dark leading-relaxed">{benefit.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── Auth Banner ─────────────────────────────────────────── */}
       {(!isLoggedIn || authBanner) && (
@@ -357,13 +385,17 @@ export default function ListYourBusiness() {
       )}
 
       {/* ── Form ────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="bg-brand-gray py-10">
+      <div className="max-w-4xl mx-auto px-4">
         <form onSubmit={handleSubmit}>
           <div className="space-y-8">
             {/* ── Section 1: Business Information ───────────────────── */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-brand-black mb-1">Business Information</h2>
-              <p className="text-brand-gray-dark text-sm mb-6">Tell us about your business.</p>
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">1</div>
+                <h2 className="text-xl font-bold text-brand-black">Business Information</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-6 ml-9">Tell us about your business.</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
@@ -492,9 +524,12 @@ export default function ListYourBusiness() {
             </section>
 
             {/* ── Section 2: Services Offered ───────────────────────── */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-brand-black mb-1">Services Offered</h2>
-              <p className="text-brand-gray-dark text-sm mb-6">Select all categories that apply to your business.</p>
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">2</div>
+                <h2 className="text-xl font-bold text-brand-black">Services Offered</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-6 ml-9">Select all categories that apply to your business.</p>
 
               {errors.categories && (
                 <p className="text-red-500 text-sm mb-3">{errors.categories}</p>
@@ -541,9 +576,12 @@ export default function ListYourBusiness() {
             </section>
 
             {/* ── Section 3: Service Areas ──────────────────────────── */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-brand-black mb-1">Service Areas</h2>
-              <p className="text-brand-gray-dark text-sm mb-6">
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-black/10 flex items-center justify-center text-brand-black text-xs font-bold">3</div>
+                <h2 className="text-xl font-bold text-brand-black">Service Areas</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-6 ml-9">
                 Where do you provide services? Add all cities you serve in Caldwell County and surrounding areas.
               </p>
 
@@ -657,9 +695,12 @@ export default function ListYourBusiness() {
             </section>
 
             {/* ── Section 4: Work Photos & Logo ──────────────────────── */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-brand-black mb-1">Work Photos &amp; Logo</h2>
-              <p className="text-brand-gray-dark text-sm mb-6">
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">4</div>
+                <h2 className="text-xl font-bold text-brand-black">Work Photos &amp; Logo</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-6 ml-9">
                 Showcase your best work and add your business logo.
               </p>
 
@@ -767,9 +808,12 @@ export default function ListYourBusiness() {
             </section>
 
             {/* ── Section 5: Terms ───────────────────────────────────── */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-brand-black mb-1">Provider Agreement</h2>
-              <p className="text-brand-gray-dark text-sm mb-4">
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">5</div>
+                <h2 className="text-xl font-bold text-brand-black">Provider Agreement</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-4 ml-9">
                 Please review and agree to our terms before submitting your application.
               </p>
 
@@ -819,6 +863,7 @@ export default function ListYourBusiness() {
             </div>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );
