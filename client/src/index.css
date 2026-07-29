@@ -3,33 +3,188 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     color: #1A1A1A;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4 {
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.025em;
+  }
+  ::selection {
+    background-color: #9B1B30;
+    color: #FFFFFF;
   }
 }
 
 @layer components {
+  /* ── Buttons ──────────────────────────────────── */
   .btn-primary {
-    @apply bg-brand-red text-white px-6 py-2.5 rounded-lg font-medium
-           hover:bg-brand-red-dark transition-colors duration-200
+    @apply bg-brand-red text-white px-6 py-3 rounded-lg font-semibold
+           hover:bg-brand-red-dark transition-all duration-200
            focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:opacity-50 disabled:cursor-not-allowed
+           shadow-md shadow-brand-red/20 hover:shadow-lg hover:shadow-brand-red/30
+           active:scale-[0.98];
   }
   .btn-secondary {
-    @apply bg-white text-[#1A1A1A] border border-gray-300 px-6 py-2.5 rounded-lg font-medium
-           hover:bg-gray-50 transition-colors duration-200
+    @apply bg-white text-brand-black border-2 border-gray-200 px-6 py-3 rounded-lg font-semibold
+           hover:border-brand-red hover:text-brand-red transition-all duration-200
            focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:opacity-50 disabled:cursor-not-allowed
+           active:scale-[0.98];
   }
+  .btn-white {
+    @apply bg-white text-brand-red px-6 py-3 rounded-lg font-semibold
+           hover:bg-gray-100 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-red
+           shadow-md hover:shadow-lg
+           active:scale-[0.98];
+  }
+  .btn-gold {
+    @apply bg-brand-gold text-white px-6 py-3 rounded-lg font-semibold
+           hover:bg-brand-gold-dark transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-brand-gold focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed
+           shadow-md shadow-brand-gold/20 hover:shadow-lg
+           active:scale-[0.98];
+  }
+
+  /* ── Inputs ───────────────────────────────────── */
   .input-field {
-    @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white
-           text-[#1A1A1A] placeholder-gray-400
-           focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent
-           transition-colors duration-200;
+    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white
+           text-brand-black placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red
+           transition-all duration-200;
+  }
+  .input-field-error {
+    @apply border-red-400 focus:ring-red-400/50 focus:border-red-400;
+  }
+
+  /* ── Cards ────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100
+           hover:shadow-md transition-shadow duration-300;
+  }
+  .card-hover-lift {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100
+           hover:shadow-xl hover:-translate-y-1 transition-all duration-300;
+  }
+
+  /* ── Section Headers ──────────────────────────── */
+  .section-badge {
+    @apply inline-block bg-brand-red/10 text-brand-red text-xs font-bold uppercase tracking-wider
+           px-3 py-1 rounded-full mb-4;
+  }
+  .section-title {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-black leading-tight tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-lg text-brand-gray-dark max-w-2xl leading-relaxed;
+  }
+
+  /* ── Hero Gradient ────────────────────────────── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #9B1B30 0%, #7A1526 40%, #1A1A1A 100%);
+  }
+  .hero-gradient-light {
+    background: linear-gradient(135deg, #C4203D 0%, #9B1B30 60%, #7A1526 100%);
+  }
+  .hero-dark-gradient {
+    background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+  }
+  .gold-gradient {
+    background: linear-gradient(135deg, #C8963E 0%, #D4A855 50%, #A67A2E 100%);
+  }
+
+  /* ── Page Headers ─────────────────────────────── */
+  .page-header {
+    background: linear-gradient(135deg, #9B1B30 0%, #7A1526 60%, #1A1A1A 100%);
+    @apply py-16 sm:py-20 text-white;
+  }
+  .page-header-light {
+    background: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 50%, #F5F5F5 100%);
+    @apply py-16 sm:py-20;
+  }
+
+  /* ── Feature icon circles ─────────────────────── */
+  .icon-circle-red {
+    @apply w-14 h-14 rounded-full bg-brand-red/10 flex items-center justify-center
+           text-brand-red text-xl font-bold;
+  }
+  .icon-circle-gold {
+    @apply w-14 h-14 rounded-full bg-brand-gold/10 flex items-center justify-center
+           text-brand-gold text-xl font-bold;
+  }
+  .icon-circle-dark {
+    @apply w-14 h-14 rounded-full bg-brand-black/10 flex items-center justify-center
+           text-brand-black text-xl font-bold;
+  }
+
+  /* ── Stat card for trust indicators ───────────── */
+  .stat-card {
+    @apply text-center px-4 py-3;
+  }
+  .stat-number {
+    @apply text-3xl sm:text-4xl font-bold text-brand-red;
+  }
+  .stat-label {
+    @apply text-sm text-brand-gray-dark mt-1;
+  }
+
+  /* ── Tag / Chip ───────────────────────────────── */
+  .tag {
+    @apply inline-block px-3 py-1.5 rounded-full text-xs font-medium
+           border transition-colors duration-200;
+  }
+  .tag-red {
+    @apply bg-brand-red/10 text-brand-red border-brand-red/20;
+  }
+  .tag-gold {
+    @apply bg-brand-gold/10 text-brand-gold border-brand-gold/20;
+  }
+  .tag-gray {
+    @apply bg-gray-100 text-brand-gray-dark border-gray-200;
+  }
+
+  /* ── Step indicator ───────────────────────────── */
+  .step-dot {
+    @apply w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm;
+  }
+  .step-dot-active {
+    @apply bg-brand-red text-white shadow-lg shadow-brand-red/30;
+  }
+  .step-dot-inactive {
+    @apply bg-gray-200 text-brand-gray-dark;
+  }
+  .step-dot-complete {
+    @apply bg-green-500 text-white shadow-lg shadow-green-500/30;
+  }
+  .step-line {
+    @apply flex-1 h-1 rounded-full bg-gray-200;
+  }
+  .step-line-active {
+    @apply bg-brand-red;
+  }
+  .step-line-complete {
+    @apply bg-green-500;
+  }
+
+  /* ── Nav & Footer links ───────────────────────── */
+  .nav-link {
+    @apply px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors
+           rounded-lg text-sm font-medium;
+  }
+  .mobile-nav-link {
+    @apply block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray
+           hover:text-brand-black transition-colors font-medium text-sm;
+  }
+  .footer-link {
+    @apply hover:text-white transition-colors duration-200;
   }
 }

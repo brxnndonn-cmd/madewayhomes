@@ -1,8 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx,css}',
+    './client/index.html',
+    './client/src/**/*.tsx',
+    './client/src/**/*.ts',
+    './client/src/**/*.jsx',
+    './client/src/**/*.js',
+    './client/src/**/*.css',
   ],
   safelist: [
     // Ensure brand color utilities are generated for dynamic use
@@ -27,6 +31,9 @@ module.exports = {
           'red-light': '#C4203D',
           black: '#1A1A1A',
           white: '#FFFFFF',
+          gold: '#C8963E',
+          'gold-light': '#D4A855',
+          'gold-dark': '#A67A2E',
           gray: '#F5F5F5',
           'gray-medium': '#9CA3AF',
           'gray-dark': '#4B5563',

@@ -1,94 +1,75 @@
 import { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { authApi } from '../lib/api';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Card, CardHeader, CardContent } from '../components/ui/Card';
+import { apiFetch } from '../lib/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [msg, setMsg] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!email.trim()) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    setLoading(true);
+    if (!email.trim()) { setStatus('error'); setMsg('Email is required.'); return; }
+    setStatus('loading');
     try {
-      const data = await authApi.forgotPassword(email);
-      setSuccess(data.message);
-      if (data.resetToken) {
-        setResetToken(data.resetToken);
-      }
+      await apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }), skipAuth: true });
+      setStatus('success');
+      setMsg('If an account exists with that email, a password reset link has been sent.');
     } catch (err: any) {
-      setError(err.data?.error || err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+      setStatus('error');
+      setMsg(err.data?.error || 'Something went wrong. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <h1 className="text-2xl font-bold text-brand-black">Forgot Password</h1>
-          <p className="text-brand-gray-dark mt-1">Enter your email and we'll help you reset your password.</p>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
-            </div>
-          )}
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 bg-brand-gray">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block">
+            <span className="text-2xl font-extrabold text-brand-black tracking-tight">
+              Made<span className="text-brand-red">Way</span>Homes
+            </span>
+          </Link>
+        </div>
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-              {success}
+        <div className="card p-8">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-brand-red/10 flex items-center justify-center">
+              <svg className="w-7 h-7 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
             </div>
-          )}
+            <h1 className="text-2xl font-bold text-brand-black">Reset Your Password</h1>
+            <p className="text-brand-gray-dark text-sm mt-1">Enter your email and we'll send you a reset link</p>
+          </div>
 
-          {resetToken && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-              <p className="font-medium text-blue-800 mb-1">Dev Mode — Reset Token:</p>
-              <code className="text-xs text-blue-700 break-all">{resetToken}</code>
-              <p className="mt-2 text-blue-600">
-                <Link to={`/reset-password?token=${resetToken}`} className="underline font-medium">
-                  Click here to reset your password
-                </Link>
+          {status === 'success' ? (
+            <div className="text-center py-6">
+              <div className="text-5xl mb-4">📧</div>
+              <p className="text-brand-gray-dark leading-relaxed">{msg}</p>
+              <Link to="/login" className="btn-primary mt-6 inline-block">Back to Login</Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {status === 'error' && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+                  <span>⚠️</span><span>{msg}</span>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-semibold text-brand-black mb-1">Email</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="input-field" />
+              </div>
+              <button type="submit" disabled={status === 'loading'} className="btn-primary w-full">
+                {status === 'loading' ? 'Sending...' : 'Send Reset Link'}
+              </button>
+              <p className="text-center text-sm mt-4">
+                <Link to="/login" className="text-brand-red hover:text-brand-red-dark font-semibold">← Back to Login</Link>
               </p>
-            </div>
+            </form>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Button type="submit" loading={loading} className="w-full">
-              Send Reset Link
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-brand-gray-dark">
-            Remember your password?{' '}
-            <Link to="/login" className="text-brand-red hover:text-brand-red-dark font-medium transition-colors">
-              Log in
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

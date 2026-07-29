@@ -7,17 +7,18 @@ export default function Terms() {
   return (
     <div>
       {/* ── Header ─────────────────────────────────────────────── */}
-      <section className="bg-white py-16 border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-brand-black mb-2">Terms of Service</h1>
-          <p className="text-brand-gray-dark text-sm">Last updated: {lastUpdated}</p>
+      <section className="page-header text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight">Terms of Service</h1>
+          <p className="text-white/60 text-sm">Last updated: {lastUpdated}</p>
         </div>
       </section>
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-brand-gray">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="prose prose-sm max-w-none text-brand-gray-dark leading-relaxed space-y-8">
+          <div className="card p-8 sm:p-10">
+            <div className="space-y-8 text-brand-gray-dark leading-relaxed">
             <p>
               Welcome to {companyName}. By accessing or using our website and services (the "Platform"), 
               you agree to be bound by these Terms of Service ("Terms"). If you do not agree, please 
@@ -183,6 +184,7 @@ export default function Terms() {
               </p>
               <p className="text-sm mt-2">MadeWayHomes — Lenoir, Caldwell County, {stateName}</p>
             </div>
+          </div>
           </div>
         </div>
       </section>

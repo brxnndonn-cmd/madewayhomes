@@ -1,14 +1,10 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Card, CardHeader, CardContent } from '../components/ui/Card';
 
 export default function Register() {
   const { register, error, clearError } = useAuth();
   const navigate = useNavigate();
-
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,119 +30,119 @@ export default function Register() {
     e.preventDefault();
     clearError();
     if (!validate()) return;
-
     setLoading(true);
     try {
       await register(email, password, name, role, phone || undefined);
       navigate('/');
-    } catch (_) {
-      // error is set in auth context
-    } finally {
-      setLoading(false);
-    }
+    } catch (_) {} finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <h1 className="text-2xl font-bold text-brand-black">Create Your Account</h1>
-          <p className="text-brand-gray-dark mt-1">Join MadeWayHomes and get started today.</p>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-16 bg-brand-gray">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block">
+            <span className="text-2xl font-extrabold text-brand-black tracking-tight">
+              Made<span className="text-brand-red">Way</span>Homes
+            </span>
+          </Link>
+        </div>
+
+        <div className="card p-8">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-brand-red/10 flex items-center justify-center">
+              <svg className="w-7 h-7 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-brand-black">Create Your Account</h1>
+            <p className="text-brand-gray-dark text-sm mt-1">Join MadeWayHomes and get started today</p>
+          </div>
+
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+              <span className="flex-shrink-0">⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Full Name"
-              type="text"
-              placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={fieldErrors.name}
-            />
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={fieldErrors.email}
-              autoComplete="email"
-            />
-            <Input
-              label="Phone (optional)"
-              type="tel"
-              placeholder="(828) 555-0123"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={fieldErrors.password}
-              autoComplete="new-password"
-            />
-            <Input
-              label="Confirm Password"
-              type="password"
-              placeholder="Re-enter your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              error={fieldErrors.confirmPassword}
-              autoComplete="new-password"
-            />
+            <div>
+              <label className="block text-sm font-semibold text-brand-black mb-1">Full Name</label>
+              <input type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className={`input-field ${fieldErrors.name ? 'input-field-error' : ''}`} />
+              {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
+            </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-black mb-1">Account Type</label>
+              <label className="block text-sm font-semibold text-brand-black mb-1">Email</label>
+              <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className={`input-field ${fieldErrors.email ? 'input-field-error' : ''}`} autoComplete="email" />
+              {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-brand-black mb-1">Phone (optional)</label>
+              <input type="tel" placeholder="(828) 555-0123" value={phone} onChange={(e) => setPhone(e.target.value)} className="input-field" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-brand-black mb-1">Password</label>
+                <input type="password" placeholder="8+ characters" value={password} onChange={(e) => setPassword(e.target.value)} className={`input-field ${fieldErrors.password ? 'input-field-error' : ''}`} autoComplete="new-password" />
+                {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-brand-black mb-1">Confirm</label>
+                <input type="password" placeholder="Re-enter" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`input-field ${fieldErrors.confirmPassword ? 'input-field-error' : ''}`} autoComplete="new-password" />
+                {fieldErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-brand-black mb-2">Account Type</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['customer', 'provider', 'admin'] as const).map((r) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
-                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    className={`px-3 py-2.5 text-sm rounded-lg border-2 font-medium transition-all ${
                       role === r
-                        ? 'border-brand-red bg-red-50 text-brand-red font-medium'
-                        : 'border-gray-300 text-brand-gray-dark hover:border-gray-400'
+                        ? 'border-brand-red bg-red-50 text-brand-red shadow-sm'
+                        : 'border-gray-200 text-brand-gray-dark hover:border-gray-300'
                     }`}
                   >
-                    {r === 'customer' ? 'Homeowner' : r === 'provider' ? 'Provider' : 'Admin'}
+                    {r === 'customer' ? '🏠 Homeowner' : r === 'provider' ? '🔧 Provider' : '⚙️ Admin'}
                   </button>
                 ))}
               </div>
               {role === 'provider' && (
-                <p className="mt-2 text-xs text-brand-gray-dark">
+                <p className="mt-2 text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
                   Provider accounts require approval before you can receive leads.
-                </p>
-              )}
-              {role === 'admin' && (
-                <p className="mt-2 text-xs text-brand-gray-dark">
-                  The first admin created is auto-approved. Subsequent admin creation requires an existing admin.
                 </p>
               )}
             </div>
 
-            <Button type="submit" loading={loading} className="w-full">
-              Create Account
-            </Button>
+            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Creating Account...
+                </>
+              ) : 'Create Account'}
+            </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-brand-gray-dark">
             Already have an account?{' '}
-            <Link to="/login" className="text-brand-red hover:text-brand-red-dark font-medium transition-colors">
+            <Link to="/login" className="text-brand-red hover:text-brand-red-dark font-semibold transition-colors">
               Log in
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

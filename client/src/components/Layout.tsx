@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationBell from './NotificationBell';
@@ -11,6 +11,13 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -23,62 +30,58 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Header ──────────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-100'
+            : 'bg-white border-b border-gray-200'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 lg:h-18">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 flex-shrink-0" onClick={closeMobile}>
-              <span className="text-2xl font-bold text-brand-black tracking-tight">
-                Made<span className="text-brand-red">Way</span>Homes
+            <Link to="/" className="flex items-center space-x-2 flex-shrink-0 group" onClick={closeMobile}>
+              <span className="text-xl sm:text-2xl font-extrabold text-brand-black tracking-tight transition-colors">
+                Made<span className="text-brand-red group-hover:text-brand-red-light transition-colors">Way</span>Homes
               </span>
             </Link>
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center space-x-1">
-              <Link to="/" className="px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors rounded-lg text-sm font-medium">
-                Home
-              </Link>
-              <Link to="/providers" className="px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors rounded-lg text-sm font-medium">
-                Find a Pro
-              </Link>
-              <Link to="/how-it-works" className="px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors rounded-lg text-sm font-medium">
-                How It Works
-              </Link>
-              <Link to="/about" className="px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors rounded-lg text-sm font-medium">
-                About
-              </Link>
-              <Link to="/contact" className="px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors rounded-lg text-sm font-medium">
-                Contact
-              </Link>
+              <Link to="/" className="nav-link">Home</Link>
+              <Link to="/providers" className="nav-link">Find a Pro</Link>
+              <Link to="/how-it-works" className="nav-link">How It Works</Link>
+              <Link to="/about" className="nav-link">About</Link>
+              <Link to="/contact" className="nav-link">Contact</Link>
 
               {!user ? (
                 <>
-                  <Link to="/request" className="ml-3 btn-primary text-sm px-4 py-2">
+                  <Link to="/request" className="ml-3 btn-primary text-sm !py-2 !px-4">
                     Request a Service
                   </Link>
-                  <Link to="/list-your-business" className="ml-2 btn-secondary text-sm px-4 py-2">
+                  <Link to="/list-your-business" className="ml-2 btn-secondary text-sm !py-2 !px-4">
                     List Your Business
                   </Link>
                 </>
               ) : user.role === 'admin' ? (
                 <>
-                  <Link to="/admin" className="ml-3 px-3 py-2 text-brand-red hover:text-brand-red-dark font-medium transition-colors text-sm">
+                  <Link to="/admin" className="ml-3 px-3 py-2 text-brand-red hover:text-brand-red-dark font-semibold transition-colors text-sm">
                     Admin Dashboard
                   </Link>
                   <NotificationBell />
-                  <span className="ml-1 text-sm text-brand-gray-dark">{user.name}</span>
-                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-black transition-colors">
+                  <span className="ml-1 text-sm font-medium text-brand-black">{user.name}</span>
+                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-red transition-colors font-medium">
                     Log Out
                   </button>
                 </>
               ) : user.role === 'provider' ? (
                 <>
                   <Link to="/provider-dashboard" className="ml-3 px-3 py-2 text-brand-gray-dark hover:text-brand-black transition-colors text-sm font-medium">
-                    Provider Dashboard
+                    Dashboard
                   </Link>
                   <NotificationBell />
-                  <span className="ml-1 text-sm text-brand-gray-dark">{user.name}</span>
-                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-black transition-colors">
+                  <span className="ml-1 text-sm font-medium text-brand-black">{user.name}</span>
+                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-red transition-colors font-medium">
                     Log Out
                   </button>
                 </>
@@ -88,24 +91,31 @@ export default function Layout({ children }: LayoutProps) {
                     My Requests
                   </Link>
                   <NotificationBell />
-                  <span className="ml-1 text-sm text-brand-gray-dark">{user.name}</span>
-                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-black transition-colors">
+                  <span className="ml-1 text-sm font-medium text-brand-black">{user.name}</span>
+                  <button onClick={handleLogout} className="ml-2 text-sm text-brand-gray-dark hover:text-brand-red transition-colors font-medium">
                     Log Out
                   </button>
                 </>
               )}
             </nav>
 
-            {/* Mobile menu button */}
+            {/* Mobile buttons */}
             <div className="md:hidden flex items-center gap-2">
               {!user ? (
-                <Link to="/request" className="btn-primary text-xs px-3 py-1.5">
-                  Request
-                </Link>
-              ) : null}
+                <>
+                  <Link to="/request" className="btn-primary text-xs !py-1.5 !px-3">
+                    Request
+                  </Link>
+                  <Link to="/list-your-business" className="text-xs font-medium text-brand-red hover:text-brand-red-dark">
+                    List
+                  </Link>
+                </>
+              ) : (
+                <NotificationBell />
+              )}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="p-2 text-brand-gray-dark hover:text-brand-black"
+                className="p-2 -mr-2 text-brand-gray-dark hover:text-brand-black transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileOpen ? (
@@ -123,39 +133,42 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Mobile Nav Dropdown */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white">
-            <div className="px-4 py-3 space-y-1">
-              <Link to="/" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">Home</Link>
-              <Link to="/providers" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">Find a Pro</Link>
-              <Link to="/how-it-works" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">How It Works</Link>
-              <Link to="/about" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">About</Link>
-              <Link to="/contact" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">Contact</Link>
-              <Link to="/request" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-red hover:bg-red-50 font-medium">Request a Service</Link>
-              <Link to="/list-your-business" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray hover:text-brand-black transition-colors font-medium">List Your Business</Link>
+        <div
+          className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-all duration-300 ${
+            mobileOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="px-4 py-3 space-y-1">
+            <Link to="/" onClick={closeMobile} className="mobile-nav-link">🏠 Home</Link>
+            <Link to="/providers" onClick={closeMobile} className="mobile-nav-link">🔍 Find a Pro</Link>
+            <Link to="/how-it-works" onClick={closeMobile} className="mobile-nav-link">📋 How It Works</Link>
+            <Link to="/about" onClick={closeMobile} className="mobile-nav-link">ℹ️ About</Link>
+            <Link to="/contact" onClick={closeMobile} className="mobile-nav-link">💬 Contact</Link>
+            <Link to="/request" onClick={closeMobile} className="mobile-nav-link !text-brand-red !font-semibold">📝 Request a Service</Link>
+            <Link to="/list-your-business" onClick={closeMobile} className="mobile-nav-link">🏗️ List Your Business</Link>
 
-              {user && (
-                <>
-                  <hr className="my-2 border-gray-100" />
-                  <div className="flex items-center justify-between px-3 py-1">
-                    <span className="text-sm text-brand-gray-dark">{user.name}</span>
-                    <NotificationBell />
-                  </div>
-                  {user.role === 'admin' && (
-                    <Link to="/admin" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-red font-medium">Admin Dashboard</Link>
-                  )}
-                  {user.role === 'provider' && (
-                    <Link to="/provider-dashboard" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark font-medium">Provider Dashboard</Link>
-                  )}
-                  {user.role === 'customer' && (
-                    <Link to="/my-requests" onClick={closeMobile} className="block px-3 py-2.5 rounded-lg text-brand-gray-dark font-medium">My Requests</Link>
-                  )}
-                  <button onClick={handleLogout} className="block w-full text-left px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-brand-gray">Log Out</button>
-                </>
-              )}
-            </div>
+            {user && (
+              <>
+                <hr className="my-2 border-gray-100" />
+                <div className="flex items-center justify-between px-3 py-1">
+                  <span className="text-sm font-semibold text-brand-black">{user.name}</span>
+                </div>
+                {user.role === 'admin' && (
+                  <Link to="/admin" onClick={closeMobile} className="mobile-nav-link !text-brand-red">Admin Dashboard</Link>
+                )}
+                {user.role === 'provider' && (
+                  <Link to="/provider-dashboard" onClick={closeMobile} className="mobile-nav-link">Provider Dashboard</Link>
+                )}
+                {user.role === 'customer' && (
+                  <Link to="/my-requests" onClick={closeMobile} className="mobile-nav-link">My Requests</Link>
+                )}
+                <button onClick={handleLogout} className="block w-full text-left px-3 py-2.5 rounded-lg text-brand-gray-dark hover:bg-gray-50 transition-colors font-medium">
+                  Log Out
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </header>
 
       {/* ── Main Content ─────────────────────────────────────── */}
@@ -165,64 +178,68 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* ── Footer ───────────────────────────────────────────── */}
       <footer className="bg-brand-black text-white mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        {/* Top wave/divider */}
+        <div className="h-1 bg-gradient-to-r from-brand-red via-brand-gold to-brand-red" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
-              <h3 className="text-lg font-semibold mb-3 tracking-tight">
+              <h3 className="text-xl font-extrabold mb-4 tracking-tight">
                 Made<span className="text-brand-red-light">Way</span>Homes
               </h3>
               <p className="text-gray-400 text-sm leading-relaxed">
                 Making the way home easier. Connecting Caldwell County homeowners with trusted local service providers.
               </p>
-              <p className="text-gray-500 text-xs mt-3">
-                Serving Lenoir &amp; Caldwell County, NC
+              <p className="text-gray-500 text-xs mt-4 flex items-center gap-1">
+                <span>📍</span> Serving Lenoir &amp; Caldwell County, NC
               </p>
             </div>
 
-            {/* Quick Links */}
+            {/* For Homeowners */}
             <div>
-              <h4 className="font-medium text-sm mb-3 text-gray-300">For Homeowners</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/request" className="hover:text-white transition-colors">Request a Service</Link></li>
-                <li><Link to="/providers" className="hover:text-white transition-colors">Find a Pro</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
-                <li><Link to="/services" className="hover:text-white transition-colors">Browse Services</Link></li>
+              <h4 className="font-semibold text-sm mb-4 text-gray-300 uppercase tracking-wider">For Homeowners</h4>
+              <ul className="space-y-2.5 text-sm text-gray-400">
+                <li><Link to="/request" className="footer-link">Request a Service</Link></li>
+                <li><Link to="/providers" className="footer-link">Find a Pro</Link></li>
+                <li><Link to="/how-it-works" className="footer-link">How It Works</Link></li>
+                <li><Link to="/services" className="footer-link">Browse Services</Link></li>
               </ul>
             </div>
 
             {/* For Providers */}
             <div>
-              <h4 className="font-medium text-sm mb-3 text-gray-300">For Providers</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/list-your-business" className="hover:text-white transition-colors">List Your Business</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
+              <h4 className="font-semibold text-sm mb-4 text-gray-300 uppercase tracking-wider">For Providers</h4>
+              <ul className="space-y-2.5 text-sm text-gray-400">
+                <li><Link to="/list-your-business" className="footer-link">List Your Business</Link></li>
+                <li><Link to="/how-it-works" className="footer-link">How It Works</Link></li>
+                <li><Link to="/providers" className="footer-link">Provider Directory</Link></li>
               </ul>
             </div>
 
             {/* Company */}
             <div>
-              <h4 className="font-medium text-sm mb-3 text-gray-300">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              <h4 className="font-semibold text-sm mb-4 text-gray-300 uppercase tracking-wider">Company</h4>
+              <ul className="space-y-2.5 text-sm text-gray-400">
+                <li><Link to="/about" className="footer-link">About</Link></li>
+                <li><Link to="/contact" className="footer-link">Contact</Link></li>
               </ul>
             </div>
 
             {/* Legal */}
             <div>
-              <h4 className="font-medium text-sm mb-3 text-gray-300">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <h4 className="font-semibold text-sm mb-4 text-gray-300 uppercase tracking-wider">Legal</h4>
+              <ul className="space-y-2.5 text-sm text-gray-400">
+                <li><Link to="/privacy" className="footer-link">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="footer-link">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-10 pt-8 border-t border-gray-700 text-center text-sm text-gray-500">
+          <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
             <p>&copy; {new Date().getFullYear()} MadeWayHomes. All rights reserved.</p>
-            <p className="mt-1 text-xs">
-              MadeWayHomes is a marketing and lead-generation platform, not a real estate brokerage. 
+            <p className="mt-1 text-xs max-w-lg mx-auto">
+              MadeWayHomes is a marketing and lead-generation platform, not a real estate brokerage.
               Service providers are independent businesses.
             </p>
           </div>
