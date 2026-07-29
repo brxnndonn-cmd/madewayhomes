@@ -4,6 +4,17 @@ import { sqlite } from './index';
 export function runMigrations() {
   console.log('🔧 Running database migrations...');
 
+  // Ensure audit_logs table exists
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      action TEXT NOT NULL,
+      details TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
   // Migrate: widen service_requests status CHECK constraint
   try {
     // Check if old constraint exists by testing a new status value
