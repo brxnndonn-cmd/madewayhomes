@@ -16,14 +16,23 @@ const __dirname = path.dirname(__filename);
 const router = Router();
 
 // ── Multer Configuration ──────────────────────────────────────────────
-const uploadsDir = path.resolve(__dirname, '../../data/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const publicUploadsDir = path.resolve(__dirname, '../../data/uploads/public');
+const credentialsDir = path.resolve(__dirname, '../../data/uploads/credentials');
+if (!fs.existsSync(publicUploadsDir)) {
+  fs.mkdirSync(publicUploadsDir, { recursive: true });
+}
+if (!fs.existsSync(credentialsDir)) {
+  fs.mkdirSync(credentialsDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
+  destination: (_req, file, cb) => {
+    // Credential documents go to a private directory not served as static files
+    if (file.fieldname === 'credential_document') {
+      cb(null, credentialsDir);
+    } else {
+      cb(null, publicUploadsDir);
+    }
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -312,7 +321,8 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
     }
 
     if (files?.credential_document && files.credential_document.length > 0) {
-      credentialDocPath = `/uploads/${files.credential_document[0].filename}`;
+      // Store filesystem path (not URL) — credentials are not publicly served
+      credentialDocPath = `data/uploads/credentials/${files.credential_document[0].filename}`;
     }
 
     // ── Create provider profile ─────────────────────────────────────
@@ -454,8 +464,11 @@ router.get('/', (req: Request, res: Response) => {
         SELECT image_url FROM provider_images WHERE provider_id = ?
       `).all(p.id);
 
+      // Strip sensitive fields from public response
+      const { credential_document_path, ...safe } = p;
+
       return {
-        ...p,
+        ...safe,
         services,
         areas,
         images: images.map((img: any) => img.image_url),
@@ -519,9 +532,12 @@ router.get('/:id', (req: Request, res: Response) => {
       .where(eq(providerImages.provider_id, provider.id))
       .all();
 
+    // Strip sensitive fields from public response
+    const { credential_document_path, ...safeProvider } = provider;
+
     res.json({
       provider: {
-        ...provider,
+        ...safeProvider,
         services,
         areas,
         images: images.map((img) => img.image_url),

@@ -4,6 +4,12 @@ import { users, providerProfiles, providerServices, serviceAreas, providerImages
 import { eq, desc, like, and, sql } from 'drizzle-orm';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { notifyUser, getAllNotifications } from '../services/notifications';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
 
@@ -247,6 +253,56 @@ router.put('/providers/:id', (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('PUT /api/admin/providers/:id error:', err);
     res.status(500).json({ error: 'Failed to update provider' });
+  }
+});
+
+// ── GET /api/admin/providers/:id/credential ─────────────────────────
+// Admin-only download of credential documents (license, insurance)
+router.get('/providers/:id/credential', (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'Invalid provider ID' });
+      return;
+    }
+
+    const provider = db.select().from(providerProfiles).where(eq(providerProfiles.id, id)).get();
+    if (!provider) {
+      res.status(404).json({ error: 'Provider not found' });
+      return;
+    }
+
+    const credentialPath = (provider as any).credential_document_path;
+    if (!credentialPath) {
+      res.status(404).json({ error: 'No credential document uploaded for this provider' });
+      return;
+    }
+
+    // Resolve path relative to project root
+    const absolutePath = path.resolve(__dirname, '../../', credentialPath);
+    if (!fs.existsSync(absolutePath)) {
+      res.status(404).json({ error: 'Credential document file not found on disk' });
+      return;
+    }
+
+    const filename = path.basename(credentialPath);
+    const ext = path.extname(filename).toLowerCase();
+
+    const mimeTypes: Record<string, string> = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.webp': 'image/webp',
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.sendFile(absolutePath);
+  } catch (err: any) {
+    console.error('GET /api/admin/providers/:id/credential error:', err);
+    res.status(500).json({ error: 'Failed to download credential document' });
   }
 });
 

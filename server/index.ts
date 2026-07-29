@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
@@ -21,6 +22,23 @@ const app = express();
 const PORT = parseInt(process.env.API_PORT || '3001', 10);
 const isProduction = process.env.NODE_ENV === 'production';
 
+// ── Rate Limiters ──────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+});
+
+const formLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+});
+
 // ── Middleware ──────────────────────────────────────────────────────
 app.use(cors({
   origin: isProduction ? false : (process.env.CLIENT_URL || 'http://localhost:5173'),
@@ -31,20 +49,22 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ── API Routes ─────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+// Auth routes: 5 req/min per IP
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api', publicRoutes);
-app.use('/api/service-requests', requestRoutes);
+// Public form routes: 10 req/min per IP
+app.use('/api', formLimiter, publicRoutes);
+app.use('/api/service-requests', formLimiter, requestRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Serve uploaded files
-const uploadsPath = path.resolve(__dirname, '../data/uploads');
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
+// Serve uploaded public files (credentials stored outside this tree)
+const uploadsPublicPath = path.resolve(__dirname, '../data/uploads/public');
+if (!fs.existsSync(uploadsPublicPath)) {
+  fs.mkdirSync(uploadsPublicPath, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsPath));
+app.use('/uploads', express.static(uploadsPublicPath));
 
 // Health check
 app.get('/api/health', (_req, res) => {

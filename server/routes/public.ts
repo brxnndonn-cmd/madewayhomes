@@ -25,7 +25,10 @@ router.get('/providers/featured', (_req: Request, res: Response) => {
     .limit(3)
     .all();
 
-    res.json({ providers: approved });
+    // Defense-in-depth: strip any sensitive fields that may leak
+    const sanitized = approved.map(({ credential_document_path, ...safe }: any) => safe);
+
+    res.json({ providers: sanitized });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch featured providers' });
   }

@@ -1,6 +1,15 @@
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production-madewayhomes-2024';
+const DEV_FALLBACK = 'dev-secret-change-in-production-madewayhomes-2024';
+
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error(
+    'FATAL: JWT_SECRET environment variable is required in production mode.\n' +
+    'Set it via: export JWT_SECRET="<your-secure-random-secret>"'
+  );
+}
+
+const SECRET = process.env.JWT_SECRET || DEV_FALLBACK;
 const EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface JwtPayload {
