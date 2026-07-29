@@ -174,7 +174,7 @@ async function seed() {
       email: 'bob@bobsrepairs.example.com',
       website: 'https://bobsrepairs.example.com',
       years: 10,
-      status: 'approved',
+      status: 'published',
       categories: [1, 4, 8, 12], // plumbing, painting, carpentry, handyman
       areas: ['Lenoir', 'Granite Falls'],
     },
@@ -188,7 +188,7 @@ async function seed() {
       email: 'carlos@greenview.example.com',
       website: 'https://greenview.example.com',
       years: 7,
-      status: 'approved',
+      status: 'published',
       categories: [5, 6, 13], // cleaning, landscaping, lawn-care
       areas: ['Lenoir', 'Hudson', 'Granite Falls', 'Gamewell'],
     },
@@ -202,7 +202,7 @@ async function seed() {
       email: 'sarah@sparkleshine.example.com',
       website: 'https://sparkleshine.example.com',
       years: 5,
-      status: 'approved',
+      status: 'published',
       categories: [5, 15, 16], // cleaning, house-cleaning, property-cleaning
       areas: ['Lenoir', 'Granite Falls', 'Sawmills'],
     },
@@ -244,7 +244,7 @@ async function seed() {
       email: 'tom@lenoirhandyman.example.com',
       website: 'https://lenoirhandyman.example.com',
       years: 8,
-      status: 'approved',
+      status: 'published',
       categories: [4, 8, 12, 20], // painting, carpentry, handyman, furniture-assembly
       areas: ['Lenoir', 'Granite Falls'],
     },
@@ -272,7 +272,7 @@ async function seed() {
       email: 'james@foothillsphoto.example.com',
       website: 'https://foothillsphoto.example.com',
       years: 6,
-      status: 'approved',
+      status: 'published',
       categories: [23, 22], // real-estate-photography, rental-turnover
       areas: ['Lenoir', 'Granite Falls', 'Hudson', 'Gamewell', 'Sawmills'],
     },
@@ -312,10 +312,10 @@ async function seed() {
     }
   }
 
-  const approvedCount = demoProviders.filter(p => p.status === 'approved').length;
+  const publishedCount = demoProviders.filter(p => p.status === 'published').length;
   const pendingCount = demoProviders.filter(p => p.status === 'pending_review').length;
   console.log(`✅ ${demoProviders.length} demo providers created (all use password: Provider1!)`);
-  console.log(`   Approved: ${approvedCount}, Pending Review: ${pendingCount}`);
+  console.log(`   Published: ${publishedCount}, Pending Review: ${pendingCount}`);
 
   // ── Create service categories ─────────────────────────────────────
   // Merge original categories with MVP owner-specified categories

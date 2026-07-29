@@ -77,7 +77,7 @@ function ensureTables() {
       insurance_provider TEXT,
       insurance_policy_number TEXT,
       business_hours TEXT,
-      approval_status TEXT NOT NULL DEFAULT 'pending_review' CHECK(approval_status IN ('pending_review','changes_requested','approved','published','rejected','suspended')),
+      approval_status TEXT NOT NULL DEFAULT 'pending_review' CHECK(approval_status IN ('pending_review','published','rejected')),
       is_verified INTEGER NOT NULL DEFAULT 0,
       licensed TEXT DEFAULT 'not_applicable' CHECK(licensed IN ('yes','no','not_applicable')),
       insured TEXT DEFAULT 'no' CHECK(insured IN ('yes','no')),
@@ -407,7 +407,7 @@ router.get('/', (req: Request, res: Response) => {
     ensureTables();
 
     const { category, city, search } = req.query;
-    const conditions: string[] = ["(p.approval_status = 'published' OR p.approval_status = 'approved')"];
+    const conditions: string[] = ["p.approval_status = 'published'"];
     const params: any[] = [];
 
     if (category && String(category).trim()) {
@@ -490,7 +490,7 @@ router.get('/:id', (req: Request, res: Response) => {
       return;
     }
 
-    if (provider.approval_status !== 'published' && provider.approval_status !== 'approved') {
+    if (provider.approval_status !== 'published') {
       res.status(404).json({ error: 'Provider not found' });
       return;
     }

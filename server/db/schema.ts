@@ -33,7 +33,8 @@ export const providerProfiles = sqliteTable('provider_profiles', {
   insurance_provider: text('insurance_provider'),
   insurance_policy_number: text('insurance_policy_number'),
   business_hours: text('business_hours'), // JSON
-  approval_status: text('approval_status', { enum: ['pending', 'approved', 'rejected'] }).notNull().default('pending'),
+  approval_status: text('approval_status', { enum: ['pending_review', 'published', 'rejected'] }).notNull().default('pending_review'),
+  // Future statuses: changes_requested, approved, suspended
   created_at: text('created_at').notNull().default(sql`(datetime('now'))`),
   updated_at: text('updated_at').notNull().default(sql`(datetime('now'))`),
 });

@@ -96,11 +96,8 @@ const statusColors: Record<string, string> = {
   in_progress: 'tag bg-orange-100 text-orange-700 border-orange-200',
   canceled: 'tag bg-red-100 text-red-700 border-red-200',
   pending_review: 'tag tag-gold',
-  changes_requested: 'tag bg-orange-100 text-orange-700 border-orange-200',
-  approved: 'tag bg-blue-100 text-blue-700 border-blue-200',
   published: 'tag bg-green-100 text-green-700 border-green-200',
   rejected: 'tag bg-red-100 text-red-700 border-red-200',
-  suspended: 'tag bg-gray-100 text-gray-700 border-gray-200',
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -191,11 +188,8 @@ export default function AdminDashboard() {
 
   const handleProviderStatus = async (id: number, status: string) => {
     const labels: Record<string, string> = {
-      approved: 'Approve',
+      published: 'Approve & Publish',
       rejected: 'Reject',
-      published: 'Publish',
-      changes_requested: 'Request Changes',
-      suspended: 'Suspend',
     };
     if (!confirm(`${labels[status] || status} this provider?`)) return;
     try {
@@ -383,7 +377,7 @@ export default function AdminDashboard() {
     provSort,
   );
 
-  const approvedProviders = providers.filter(p => p.approval_status === 'approved');
+  const publishedProviders = providers.filter(p => p.approval_status === 'published');
 
   // ── Loading ─────────────────────────────────────────────────────────
 
@@ -687,7 +681,7 @@ export default function AdminDashboard() {
                                 onMatch={() => handleMatchRequest(r.id)}
                                 matchProviderId={matchProviderId}
                                 setMatchProviderId={setMatchProviderId}
-                                approvedProviders={approvedProviders}
+                                publishedProviders={publishedProviders}
                                 notes={requestNotes}
                                 loadingNotes={loadingNotes}
                                 newNote={newNote}
@@ -719,11 +713,8 @@ export default function AdminDashboard() {
             >
               <option value="all">All Statuses</option>
               <option value="pending_review">Pending Review</option>
-              <option value="changes_requested">Changes Requested</option>
-              <option value="approved">Approved</option>
               <option value="published">Published</option>
               <option value="rejected">Rejected</option>
-              <option value="suspended">Suspended</option>
             </select>
             <input
               type="text"
@@ -779,25 +770,25 @@ export default function AdminDashboard() {
                             <div className="flex gap-1 flex-wrap">
                               {p.approval_status === 'pending_review' && (
                                 <>
-                                  <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'approved'); }} className="btn-primary text-xs px-2 py-1">
-                                    Approve
+                                  <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'published'); }} className="btn-primary text-xs px-2 py-1">
+                                    Approve &amp; Publish
                                   </button>
                                   <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'rejected'); }} className="btn-secondary text-xs px-2 py-1">
                                     Reject
                                   </button>
                                 </>
                               )}
-                              {p.approval_status === 'approved' && (
-                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'published'); }} className="btn-primary text-xs px-2 py-1">
-                                  Publish
-                                </button>
-                              )}
                               {p.approval_status === 'published' && (
-                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'approved'); }} className="btn-secondary text-xs px-2 py-1">
+                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'pending_review'); }} className="btn-secondary text-xs px-2 py-1">
                                   Unpublish
                                 </button>
                               )}
-                              {(p.approval_status === 'approved' || p.approval_status === 'published') && (
+                              {p.approval_status === 'rejected' && (
+                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'pending_review'); }} className="btn-secondary text-xs px-2 py-1">
+                                  Re-review
+                                </button>
+                              )}
+                              {p.approval_status === 'published' && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleProviderVerify(p.id, !p.is_verified); }}
                                   className={`text-xs px-2 py-1 ${p.is_verified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'} rounded font-medium`}
@@ -925,7 +916,7 @@ function RequestDetails({
   onMatch,
   matchProviderId,
   setMatchProviderId,
-  approvedProviders,
+  publishedProviders,
   notes,
   loadingNotes,
   newNote,
@@ -937,7 +928,7 @@ function RequestDetails({
   onMatch: () => void;
   matchProviderId: number | null;
   setMatchProviderId: (id: number | null) => void;
-  approvedProviders: Provider[];
+  publishedProviders: Provider[];
   notes: Note[];
   loadingNotes: boolean;
   newNote: string;
@@ -1012,7 +1003,7 @@ function RequestDetails({
               className="input-field text-sm flex-1"
             >
               <option value="">Select provider...</option>
-              {approvedProviders.map(p => (
+              {publishedProviders.map(p => (
                 <option key={p.id} value={p.id}>{p.business_name}</option>
               ))}
             </select>

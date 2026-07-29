@@ -21,7 +21,7 @@ router.get('/providers/featured', (_req: Request, res: Response) => {
       approval_status: providerProfiles.approval_status,
     })
     .from(providerProfiles)
-    .where(eq(providerProfiles.approval_status, 'approved'))
+    .where(eq(providerProfiles.approval_status, 'published'))
     .limit(3)
     .all();
 

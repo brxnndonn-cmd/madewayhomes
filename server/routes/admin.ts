@@ -21,7 +21,7 @@ router.get('/dashboard', (_req: Request, res: Response) => {
   const totalUsers = db.select().from(users).all().length;
   const totalCustomers = db.select().from(users).where(eq(users.role, 'customer')).all().length;
   const totalProviders = db.select().from(users).where(eq(users.role, 'provider')).all().length;
-  const pendingProviders = db.select().from(providerProfiles).where(eq(providerProfiles.approval_status, 'pending')).all().length;
+  const pendingProviders = db.select().from(providerProfiles).where(eq(providerProfiles.approval_status, 'pending_review')).all().length;
 
   res.json({
     stats: {
@@ -111,7 +111,7 @@ router.post('/providers/:id/status', (req: Request, res: Response) => {
     }
 
     const { status } = req.body;
-    const validStatuses = ['approved', 'rejected', 'published', 'pending_review', 'changes_requested', 'suspended'];
+    const validStatuses = ['pending_review', 'published', 'rejected'];
     if (!status || !validStatuses.includes(status)) {
       res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
       return;
@@ -130,10 +130,6 @@ router.post('/providers/:id/status', (req: Request, res: Response) => {
 
     // Notify the provider
     const statusMessages: Record<string, { title: string; message: string }> = {
-      approved: {
-        title: `Application Approved — ${provider.business_name}`,
-        message: `Your business "${provider.business_name}" has been approved. It will be visible once published.`,
-      },
       published: {
         title: `Profile Published — ${provider.business_name}`,
         message: `Your business "${provider.business_name}" is now live on MadeWayHomes! Customers can find and request your services.`,
@@ -142,13 +138,9 @@ router.post('/providers/:id/status', (req: Request, res: Response) => {
         title: `Application Update — ${provider.business_name}`,
         message: `Your application for "${provider.business_name}" was not approved. Please contact us for more information.`,
       },
-      changes_requested: {
-        title: `Changes Requested — ${provider.business_name}`,
-        message: `We need additional information for your application "${provider.business_name}". Please update your profile.`,
-      },
-      suspended: {
-        title: `Profile Suspended — ${provider.business_name}`,
-        message: `Your profile "${provider.business_name}" has been temporarily suspended. Please contact us for more information.`,
+      pending_review: {
+        title: `Profile Under Review — ${provider.business_name}`,
+        message: `Your profile "${provider.business_name}" has been moved back to review. We'll be in touch.`,
       },
     };
 
@@ -358,8 +350,8 @@ router.post('/requests/:id/match', (req: Request, res: Response) => {
       res.status(404).json({ error: 'Provider not found' });
       return;
     }
-    if (provider.approval_status !== 'approved') {
-      res.status(400).json({ error: 'Provider must be approved before matching' });
+    if (provider.approval_status !== 'published') {
+      res.status(400).json({ error: 'Provider must be published before matching' });
       return;
     }
 
