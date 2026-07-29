@@ -9,7 +9,7 @@ export function validateBody(schema: ZodSchema) {
     } catch (err) {
       if (err instanceof ZodError) {
         res.status(400).json({
-          error: 'Validation failed',
+          error: 'Please check your information and try again.',
           details: err.errors.map(e => ({
             field: e.path.join('.'),
             message: e.message,
@@ -30,7 +30,7 @@ export function validateQuery(schema: ZodSchema) {
     } catch (err) {
       if (err instanceof ZodError) {
         res.status(400).json({
-          error: 'Validation failed',
+          error: 'Please check your information and try again.',
           details: err.errors.map(e => ({
             field: e.path.join('.'),
             message: e.message,

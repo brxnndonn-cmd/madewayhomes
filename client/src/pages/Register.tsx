@@ -9,7 +9,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'customer' | 'provider' | 'admin'>('customer');
+  const [role, setRole] = useState<'customer' | 'provider'>('customer');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -99,8 +99,8 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-semibold text-brand-black mb-2">Account Type</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['customer', 'provider', 'admin'] as const).map((r) => (
+              <div className="grid grid-cols-2 gap-2">
+                {(['customer', 'provider'] as const).map((r) => (
                   <button
                     key={r}
                     type="button"
@@ -111,7 +111,7 @@ export default function Register() {
                         : 'border-gray-200 text-brand-gray-dark hover:border-gray-300'
                     }`}
                   >
-                    {r === 'customer' ? '🏠 Homeowner' : r === 'provider' ? '🔧 Provider' : '⚙️ Admin'}
+                    {r === 'customer' ? '🏠 I\'m a Homeowner' : '🔧 I\'m a Service Provider'}
                   </button>
                 ))}
               </div>

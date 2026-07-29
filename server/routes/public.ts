@@ -38,7 +38,7 @@ router.get('/providers/featured', (_req: Request, res: Response) => {
 
     res.json({ providers });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to fetch featured providers' });
+    res.status(500).json({ error: 'Unable to load featured providers. Please try again.' });
   }
 });
 
@@ -59,7 +59,7 @@ router.get('/categories', (_req: Request, res: Response) => {
 
     res.json({ categories });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
+    res.status(500).json({ error: 'Unable to load service categories. Please try again.' });
   }
 });
 
@@ -154,7 +154,7 @@ router.get('/site-settings/:key', (req: Request, res: Response) => {
 
     res.json({ key: req.params.key, value: setting.value });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to fetch setting' });
+    res.status(500).json({ error: 'Unable to load setting. Please try again.' });
   }
 });
 
@@ -182,7 +182,7 @@ router.get('/site-settings', (_req: Request, res: Response) => {
 
     res.json({ settings: map });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    res.status(500).json({ error: 'Unable to load settings. Please try again.' });
   }
 });
 

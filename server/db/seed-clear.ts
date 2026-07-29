@@ -1,10 +1,11 @@
-// Clear demo data — removes all demo/sample data but keeps admin user and site settings
+// Clear all data — removes all users, providers, requests, leads, etc.
+// Keeps: admin user and service categories
 // Run: bun run seed:clear
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-async function clearDemoData() {
+async function clearAllData() {
   const dbPath = process.env.DATABASE_PATH || './data/madewayhomes.db';
   if (!fs.existsSync(dbPath)) {
     console.log('No database found — nothing to clear.');
@@ -15,72 +16,69 @@ async function clearDemoData() {
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
 
-  console.log('🧹 Clearing demo data...');
+  console.log('🧹 Clearing all data (keeping admin + categories)...');
 
-  // Delete all users with [DEMO] in name or email
-  const demoUsers = sqlite.prepare(
-    "SELECT id, name, email FROM users WHERE name LIKE '%[DEMO]%' OR email LIKE '%demo-%'"
-  ).all() as any[];
+  // Find the admin user
+  const admin = sqlite.prepare(
+    "SELECT id, email FROM users WHERE role = 'admin' LIMIT 1"
+  ).get() as any;
 
-  if (demoUsers.length === 0) {
-    console.log('No demo users found — database may already be clean.');
-  } else {
-    // Collect IDs first (foreign keys will cascade)
-    const ids = demoUsers.map(u => u.id);
-
-    // Delete in order respecting FK constraints
-    for (const user of demoUsers) {
-      sqlite.prepare('DELETE FROM users WHERE id = ?').run(user.id);
-      console.log(`   Removed: ${user.name} (${user.email})`);
-    }
+  if (!admin) {
+    console.log('No admin user found — database may be empty or corrupted.');
+    sqlite.close();
+    process.exit(1);
   }
 
-  // Delete demo provider profiles with [DEMO] prefix
-  const demoProfiles = sqlite.prepare(
-    "SELECT id, business_name FROM provider_profiles WHERE business_name LIKE '[DEMO]%'"
-  ).all() as any[];
+  console.log(`   Keeping admin: ${admin.email} (id: ${admin.id})`);
 
-  for (const p of demoProfiles) {
-    // Cascade should handle this, but be explicit
-    sqlite.prepare('DELETE FROM provider_services WHERE provider_id = ?').run(p.id);
-    sqlite.prepare('DELETE FROM service_areas WHERE provider_id = ?').run(p.id);
-    sqlite.prepare('DELETE FROM provider_images WHERE provider_id = ?').run(p.id);
-    sqlite.prepare('DELETE FROM provider_profiles WHERE id = ?').run(p.id);
-    console.log(`   Removed provider profile: ${p.business_name}`);
-  }
+  // Delete in FK-safe order
+  sqlite.exec('DELETE FROM request_images');
+  sqlite.exec('DELETE FROM leads');
+  sqlite.exec('DELETE FROM admin_notes');
+  sqlite.exec('DELETE FROM follow_up_tasks');
+  sqlite.exec('DELETE FROM notifications');
+  sqlite.exec('DELETE FROM audit_logs');
+  sqlite.exec('DELETE FROM reviews');
+  sqlite.exec('DELETE FROM saved_providers');
+  sqlite.exec('DELETE FROM payments');
+  sqlite.exec('DELETE FROM subscriptions');
+  sqlite.exec('DELETE FROM service_requests');
+  sqlite.exec('DELETE FROM provider_services');
+  sqlite.exec('DELETE FROM service_areas');
+  sqlite.exec('DELETE FROM provider_images');
+  sqlite.exec('DELETE FROM provider_profiles');
+  sqlite.exec('DELETE FROM contact_messages');
+  sqlite.exec('DELETE FROM email_signups');
+  sqlite.exec('DELETE FROM discount_codes');
 
-  // Delete demo service requests (all, since they were created by demo/seed users)
-  const demoRequests = sqlite.prepare(
-    `SELECT sr.id, sr.description FROM service_requests sr
-     JOIN users u ON sr.customer_id = u.id
-     WHERE u.name LIKE '%[DEMO]%' OR u.email LIKE '%demo-%'`
-  ).all() as any[];
+  // Delete all non-admin users (FK cascade handles their linked data)
+  sqlite.prepare('DELETE FROM users WHERE id != ?').run(admin.id);
 
-  for (const r of demoRequests) {
-    sqlite.prepare('DELETE FROM service_requests WHERE id = ?').run(r.id);
-  }
+  // Get counts
+  const stats = {
+    users: (sqlite.prepare('SELECT COUNT(*) as c FROM users').get() as any).c,
+    providers: (sqlite.prepare('SELECT COUNT(*) as c FROM provider_profiles').get() as any).c,
+    requests: (sqlite.prepare('SELECT COUNT(*) as c FROM service_requests').get() as any).c,
+    categories: (sqlite.prepare('SELECT COUNT(*) as c FROM service_categories').get() as any).c,
+    leads: (sqlite.prepare('SELECT COUNT(*) as c FROM leads').get() as any).c,
+    notifications: (sqlite.prepare('SELECT COUNT(*) as c FROM notifications').get() as any).c,
+  };
 
-  // Delete demo-service-created data
-  sqlite.prepare("DELETE FROM request_images WHERE request_id NOT IN (SELECT id FROM service_requests)").run();
-  sqlite.prepare("DELETE FROM leads WHERE request_id NOT IN (SELECT id FROM service_requests)").run();
-  sqlite.prepare("DELETE FROM admin_notes WHERE target_id NOT IN (SELECT id FROM service_requests) AND target_type = 'request'").run();
-  sqlite.prepare("DELETE FROM notifications WHERE user_id NOT IN (SELECT id FROM users)").run();
-  sqlite.prepare("DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE name LIKE '%[DEMO]%' OR email LIKE '%demo-%')").run();
-  sqlite.prepare("DELETE FROM audit_logs WHERE user_id NOT IN (SELECT id FROM users)").run();
-
-  // Keep: admin, original provider, original customer, categories, plans, settings
-  // Also keep: provider_profiles and users NOT matching [DEMO] patterns
   console.log('');
-  console.log('✅ Demo data cleared!');
-  console.log('   Kept: admin user, site settings, service categories, subscription plans');
-  console.log('   Also kept: non-demo users/providers (Bob\'s Home Repairs, Jane Homeowner)');
+  console.log('✅ All data cleared!');
+  console.log(`   Remaining users: ${stats.users}`);
+  console.log(`   Remaining providers: ${stats.providers}`);
+  console.log(`   Remaining requests: ${stats.requests}`);
+  console.log(`   Remaining categories: ${stats.categories}`);
+  console.log(`   Remaining leads: ${stats.leads}`);
+  console.log(`   Remaining notifications: ${stats.notifications}`);
   console.log('');
-  console.log('   To restore demo data, run: bun run seed');
+  console.log('   To re-seed (creates admin + categories), run: bun run seed');
 
   sqlite.close();
 }
 
-clearDemoData().catch((err) => {
+clearAllData().catch((err) => {
   console.error('Clear failed:', err);
   process.exit(1);
 });
