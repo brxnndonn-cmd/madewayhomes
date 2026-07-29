@@ -162,7 +162,7 @@ router.post(
           budget_max INTEGER,
           preferred_date TEXT,
           contact_preference TEXT DEFAULT 'email' CHECK(contact_preference IN ('phone', 'text', 'email')),
-          status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new', 'matched', 'in_progress', 'completed', 'canceled')),
+          status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new', 'reviewing', 'sent_to_provider', 'contacted', 'completed', 'closed', 'matched', 'in_progress', 'canceled')),
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );

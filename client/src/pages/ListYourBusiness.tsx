@@ -7,6 +7,7 @@ interface Category {
   id: number;
   name: string;
   icon: string;
+  slug: string;
 }
 
 interface ServiceArea {
@@ -35,11 +36,12 @@ export default function ListYourBusiness() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submissionRef, setSubmissionRef] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [authBanner, setAuthBanner] = useState(false);
 
-  // Form state
+  // Section 1: Business Information
   const [businessName, setBusinessName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -48,22 +50,37 @@ export default function ListYourBusiness() {
   const [facebook, setFacebook] = useState('');
   const [instagram, setInstagram] = useState('');
   const [yearsInBusiness, setYearsInBusiness] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [insuranceProvider, setInsuranceProvider] = useState('');
-  const [insurancePolicyNumber, setInsurancePolicyNumber] = useState('');
   const [description, setDescription] = useState('');
+
+  // Section 2: License and Insurance
+  const [licensed, setLicensed] = useState<'yes' | 'no' | 'not_applicable'>('not_applicable');
+  const [insured, setInsured] = useState<'yes' | 'no'>('no');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [credentialFile, setCredentialFile] = useState<File | null>(null);
+  const [credentialFileName, setCredentialFileName] = useState<string | null>(null);
+
+  // Section 3: Services
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [otherService, setOtherService] = useState('');
+
+  // Section 4: Service Areas
   const [areas, setAreas] = useState<ServiceArea[]>([
     { id: Date.now(), city: '', state: 'NC', zip_code: '' },
   ]);
+
+  // Section 5: Logo and Work Photos
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Section 6: Provider Agreement
+  const [accuracyAgreed, setAccuracyAgreed] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const credentialInputRef = useRef<HTMLInputElement>(null);
 
   // Pre-fill from user
   useEffect(() => {
@@ -105,6 +122,7 @@ export default function ListYourBusiness() {
     const newErrors: Record<string, string> = {};
 
     if (!businessName.trim()) newErrors.businessName = 'Business name is required';
+    if (!ownerName.trim()) newErrors.ownerName = 'Owner/contact name is required';
     if (!phone.trim()) newErrors.phone = 'Phone number is required';
     if (!email.trim()) newErrors.email = 'Email is required';
     if (!description.trim() || description.trim().length < 50) {
@@ -117,8 +135,11 @@ export default function ListYourBusiness() {
     if (validAreas.length === 0) {
       newErrors.areas = 'At least one service area is required';
     }
+    if (!accuracyAgreed) {
+      newErrors.accuracyAgreed = 'You must confirm the accuracy of your information';
+    }
     if (!termsAgreed) {
-      newErrors.terms = 'You must agree to the Provider Agreement';
+      newErrors.termsAgreed = 'You must agree to the Provider Agreement';
     }
 
     setErrors(newErrors);
@@ -147,6 +168,18 @@ export default function ListYourBusiness() {
     setAreas(prev => prev.length > 1 ? prev.filter(a => a.id !== id) : prev);
   };
 
+  const addQuickCity = (city: string, zip: string) => {
+    if (!areas.some(a => a.city === city)) {
+      const emptyIdx = areas.findIndex(a => !a.city.trim());
+      if (emptyIdx >= 0) {
+        handleAreaChange(areas[emptyIdx].id, 'city', city);
+        handleAreaChange(areas[emptyIdx].id, 'zip_code', zip);
+      } else {
+        setAreas(prev => [...prev, { id: Date.now(), city, state: 'NC', zip_code: zip }]);
+      }
+    }
+  };
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -166,13 +199,29 @@ export default function ListYourBusiness() {
     reader.readAsDataURL(file);
   };
 
+  const handleCredentialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setApiError('Credential document must be PDF, JPG, PNG, or WebP');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setApiError('Document must be under 5MB');
+      return;
+    }
+
+    setCredentialFile(file);
+    setCredentialFileName(file.name);
+  };
+
   const handlePhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const newFiles: File[] = [];
-    const newPreviews: string[] = [];
-
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
@@ -188,20 +237,15 @@ export default function ListYourBusiness() {
         return;
       }
       newFiles.push(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotoPreviews(prev => {
-          const updated = [...prev, reader.result as string];
-          return updated.slice(0, 10);
-        });
-      };
-      reader.readAsDataURL(file);
     }
 
+    const newPreviews = newFiles.map(f => URL.createObjectURL(f));
     setPhotoFiles(prev => [...prev, ...newFiles].slice(0, 10));
+    setPhotoPreviews(prev => [...prev, ...newPreviews].slice(0, 10));
   };
 
   const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photoPreviews[index]);
     setPhotoFiles(prev => prev.filter((_, i) => i !== index));
     setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -229,23 +273,28 @@ export default function ListYourBusiness() {
       if (facebook.trim()) formData.append('facebook', facebook.trim());
       if (instagram.trim()) formData.append('instagram', instagram.trim());
       if (yearsInBusiness) formData.append('years_in_business', yearsInBusiness);
+      formData.append('licensed', licensed);
+      formData.append('insured', insured);
       if (licenseNumber.trim()) formData.append('license_number', licenseNumber.trim());
-      if (insuranceProvider.trim()) formData.append('insurance_provider', insuranceProvider.trim());
-      if (insurancePolicyNumber.trim()) formData.append('insurance_policy_number', insurancePolicyNumber.trim());
       formData.append('description', description.trim());
       formData.append('service_categories', JSON.stringify(selectedCategories));
-      formData.append('service_areas', JSON.stringify(
-        areas.filter(a => a.city.trim()).map(a => ({
-          city: a.city.trim(),
-          state: a.state || 'NC',
-          zip_code: a.zip_code?.trim() || undefined,
-        }))
-      ));
-      formData.append('terms_agreed', 'true');
 
-      if (logoFile) {
-        formData.append('logo', logoFile);
+      const areaData = areas.filter(a => a.city.trim()).map(a => ({
+        city: a.city.trim(),
+        state: a.state || 'NC',
+        zip_code: a.zip_code?.trim() || undefined,
+      }));
+      formData.append('service_areas', JSON.stringify(areaData));
+
+      if (otherService.trim()) {
+        formData.append('custom_other_service', otherService.trim());
       }
+
+      formData.append('terms_agreed', 'true');
+      formData.append('accuracy_agreed', 'true');
+
+      if (logoFile) formData.append('logo', logoFile);
+      if (credentialFile) formData.append('credential_document', credentialFile);
 
       for (const photo of photoFiles) {
         formData.append('photos', photo);
@@ -270,6 +319,7 @@ export default function ListYourBusiness() {
         return;
       }
 
+      setSubmissionRef(`APP-${data.provider?.id || '000'}`);
       setSubmitted(true);
       window.scrollTo(0, 0);
     } catch (err: any) {
@@ -294,9 +344,14 @@ export default function ListYourBusiness() {
       <div className="min-h-[70vh] flex items-center justify-center px-4">
         <div className="text-center max-w-lg">
           <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-3xl font-bold text-brand-black mb-3">Application Submitted!</h1>
+          <h1 className="text-3xl font-bold text-brand-black mb-3">Application Received</h1>
+          {submissionRef && (
+            <p className="text-brand-gray-dark mb-2">
+              Reference: <span className="font-mono font-bold text-brand-red">{submissionRef}</span>
+            </p>
+          )}
           <p className="text-brand-gray-dark text-lg mb-6">
-            Thank you! We'll review your application and get back to you within 1-2 business days.
+            MadeWayHomes will review your business information before publishing your profile. We may contact you if additional information is needed.
           </p>
           <Link to="/" className="btn-primary">
             Return to Home
@@ -319,10 +374,22 @@ export default function ListYourBusiness() {
             List Your Business on Made<span className="text-brand-gold">Way</span>Homes
           </h1>
           <p className="text-white/70 text-lg max-w-2xl mx-auto">
-            Join our network of trusted local service providers in Caldwell County and start receiving customer leads.
+            Create your business profile and get discovered by homeowners and renters throughout Caldwell County.
           </p>
         </div>
       </section>
+
+      {/* ── Launch Offer Banner ─────────────────────────────────── */}
+      <div className="bg-brand-red/5 border-b border-brand-red/20">
+        <div className="max-w-4xl mx-auto px-4 py-4 text-center">
+          <div className="inline-flex items-center gap-2 text-brand-red font-medium text-sm">
+            <span>🚀</span>
+            <span>
+              <strong>Founding Provider Offer:</strong> Join MadeWayHomes free during our local launch. No payment information required. Paid promotional options may become available later.
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* ── Benefits Section ──────────────────────────────────── */}
       <section className="bg-white py-12 sm:py-16">
@@ -336,10 +403,10 @@ export default function ListYourBusiness() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: '📈', title: 'More Leads', desc: 'Get matched with customers actively looking for your services in Caldwell County.' },
-              { icon: '🎯', title: 'Targeted Matches', desc: 'We only send you requests that match your services and service areas.' },
+              { icon: '📈', title: 'Local Visibility', desc: 'Get discovered by customers actively looking for your services in Caldwell County.' },
+              { icon: '🎯', title: 'Targeted Matches', desc: 'We connect you with requests that match your services and service areas.' },
               { icon: '🆓', title: 'Free to Join', desc: 'No upfront fees. Apply now and get listed once approved.' },
-              { icon: '🏆', title: 'Build Trust', desc: 'Showcase your work, collect reviews, and build a reputation in your community.' },
+              { icon: '🏆', title: 'Build Reputation', desc: 'Showcase your work, collect reviews, and build a reputation in your community.' },
             ].map((benefit) => (
               <div key={benefit.title} className="card-hover-lift p-6 text-center">
                 <div className="icon-circle-red mx-auto mb-4 text-2xl">{benefit.icon}</div>
@@ -395,7 +462,10 @@ export default function ListYourBusiness() {
       <div className="max-w-4xl mx-auto px-4">
         <form onSubmit={handleSubmit}>
           <div className="space-y-8">
-            {/* ── Section 1: Business Information ───────────────────── */}
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 1: Business Information                       */}
+            {/* ═══════════════════════════════════════════════════════ */}
             <section className="card p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">1</div>
@@ -420,15 +490,18 @@ export default function ListYourBusiness() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-brand-black mb-1">Owner / Contact Name</label>
+                  <label className="block text-sm font-medium text-brand-black mb-1">
+                    Owner / Contact Name <span className="text-brand-red">*</span>
+                  </label>
                   <input
                     type="text"
-                    className="input-field"
+                    className={`input-field ${errors.ownerName ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                     value={ownerName}
-                    onChange={e => setOwnerName(e.target.value)}
+                    onChange={e => { setOwnerName(e.target.value); setErrors(p => ({ ...p, ownerName: '' })); }}
                     placeholder="Your name"
                     disabled={!isLoggedIn}
                   />
+                  {errors.ownerName && <p className="text-red-500 text-xs mt-1">{errors.ownerName}</p>}
                 </div>
 
                 <div>
@@ -509,49 +582,6 @@ export default function ListYourBusiness() {
                     disabled={!isLoggedIn}
                   />
                 </div>
-
-                {/* ── Credentials ──────────────────────────────────── */}
-                <div className="md:col-span-2 pt-2">
-                  <p className="text-sm font-medium text-brand-black mb-3 border-b border-gray-200 pb-1">
-                    🔒 Credentials <span className="text-brand-gray-medium font-normal text-xs">(optional)</span>
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-black mb-1">License Number</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={licenseNumber}
-                    onChange={e => setLicenseNumber(e.target.value)}
-                    placeholder="NC-12345"
-                    disabled={!isLoggedIn}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-black mb-1">Insurance Provider</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={insuranceProvider}
-                    onChange={e => setInsuranceProvider(e.target.value)}
-                    placeholder="State Farm, Nationwide, etc."
-                    disabled={!isLoggedIn}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-black mb-1">Insurance Policy Number</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={insurancePolicyNumber}
-                    onChange={e => setInsurancePolicyNumber(e.target.value)}
-                    placeholder="POL-123456789"
-                    disabled={!isLoggedIn}
-                  />
-                </div>
               </div>
 
               <div className="mt-4">
@@ -562,7 +592,7 @@ export default function ListYourBusiness() {
                   className={`input-field min-h-[120px] ${errors.description ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   value={description}
                   onChange={e => { setDescription(e.target.value); setErrors(p => ({ ...p, description: '' })); }}
-                  placeholder="Describe your business, experience, and what makes you great (minimum 50 characters)..."
+                  placeholder="Describe your services, experience, areas served, and what makes your business different (minimum 50 characters)..."
                   disabled={!isLoggedIn}
                 />
                 <div className="flex justify-between mt-1">
@@ -572,10 +602,150 @@ export default function ListYourBusiness() {
               </div>
             </section>
 
-            {/* ── Section 2: Services Offered ───────────────────────── */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 2: License and Insurance                     */}
+            {/* ═══════════════════════════════════════════════════════ */}
             <section className="card p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">2</div>
+                <h2 className="text-xl font-bold text-brand-black">License and Insurance</h2>
+              </div>
+              <p className="text-brand-gray-dark text-sm mb-6 ml-9">Tell us about your credentials.</p>
+
+              {/* Licensed */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-brand-black mb-2">
+                  Are you licensed when required?
+                </label>
+                <div className="flex gap-3">
+                  {[
+                    { value: 'yes' as const, label: 'Yes' },
+                    { value: 'no' as const, label: 'No' },
+                    { value: 'not_applicable' as const, label: 'Not applicable' },
+                  ].map(opt => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all text-sm font-medium
+                        ${licensed === opt.value
+                          ? 'border-brand-red bg-red-50 text-brand-red'
+                          : 'border-gray-200 text-brand-gray-dark hover:border-gray-300'
+                        }
+                        ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="licensed"
+                        value={opt.value}
+                        checked={licensed === opt.value}
+                        onChange={() => setLicensed(opt.value)}
+                        className="sr-only"
+                        disabled={!isLoggedIn}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Insured */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-brand-black mb-2">
+                  Are you insured?
+                </label>
+                <div className="flex gap-3">
+                  {[
+                    { value: 'yes' as const, label: 'Yes' },
+                    { value: 'no' as const, label: 'No' },
+                  ].map(opt => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all text-sm font-medium
+                        ${insured === opt.value
+                          ? 'border-brand-red bg-red-50 text-brand-red'
+                          : 'border-gray-200 text-brand-gray-dark hover:border-gray-300'
+                        }
+                        ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="insured"
+                        value={opt.value}
+                        checked={insured === opt.value}
+                        onChange={() => setInsured(opt.value)}
+                        className="sr-only"
+                        disabled={!isLoggedIn}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* License Number */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-brand-black mb-1">License Number <span className="text-brand-gray-medium font-normal text-xs">(optional)</span></label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={licenseNumber}
+                  onChange={e => setLicenseNumber(e.target.value)}
+                  placeholder="NC-12345"
+                  disabled={!isLoggedIn}
+                />
+              </div>
+
+              {/* Credential Document Upload */}
+              <div>
+                <label className="block text-sm font-medium text-brand-black mb-2">
+                  Upload proof of license or insurance <span className="text-brand-gray-medium font-normal text-xs">(optional — PDF, JPG, PNG, WebP, max 5MB)</span>
+                </label>
+                <p className="text-xs text-brand-gray-dark mb-2">
+                  🔒 Uploaded credential documents are stored privately and only visible to MadeWayHomes administrators.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => isLoggedIn && credentialInputRef.current?.click()}
+                    disabled={!isLoggedIn}
+                    className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Choose File
+                  </button>
+                  {credentialFileName && (
+                    <span className="text-sm text-brand-gray-dark flex items-center gap-2">
+                      📎 {credentialFileName}
+                      <button
+                        type="button"
+                        onClick={() => { setCredentialFile(null); setCredentialFileName(null); }}
+                        className="text-red-500 hover:text-red-700 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </span>
+                  )}
+                  <input
+                    ref={credentialInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    onChange={handleCredentialChange}
+                    className="hidden"
+                    disabled={!isLoggedIn}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 3: Services Offered                          */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <section className="card p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-lg bg-brand-black/10 flex items-center justify-center text-brand-black text-xs font-bold">3</div>
                 <h2 className="text-xl font-bold text-brand-black">Services Offered</h2>
               </div>
               <p className="text-brand-gray-dark text-sm mb-6 ml-9">Select all categories that apply to your business.</p>
@@ -622,12 +792,29 @@ export default function ListYourBusiness() {
                   {selectedCategories.length} categor{selectedCategories.length === 1 ? 'y' : 'ies'} selected
                 </p>
               )}
+
+              {/* Other service */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <label className="block text-sm font-medium text-brand-black mb-1">
+                  Other Service <span className="text-brand-gray-medium font-normal text-xs">(custom entry)</span>
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={otherService}
+                  onChange={e => setOtherService(e.target.value)}
+                  placeholder="Enter a custom service not listed above..."
+                  disabled={!isLoggedIn}
+                />
+              </div>
             </section>
 
-            {/* ── Section 3: Service Areas ──────────────────────────── */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 4: Service Areas                             */}
+            {/* ═══════════════════════════════════════════════════════ */}
             <section className="card p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-brand-black/10 flex items-center justify-center text-brand-black text-xs font-bold">3</div>
+                <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">4</div>
                 <h2 className="text-xl font-bold text-brand-black">Service Areas</h2>
               </div>
               <p className="text-brand-gray-dark text-sm mb-6 ml-9">
@@ -646,17 +833,7 @@ export default function ListYourBusiness() {
                     <button
                       type="button"
                       key={city.city}
-                      onClick={() => {
-                        if (!areas.some(a => a.city === city.city)) {
-                          const emptyIdx = areas.findIndex(a => !a.city.trim());
-                          if (emptyIdx >= 0) {
-                            handleAreaChange(areas[emptyIdx].id, 'city', city.city);
-                            handleAreaChange(areas[emptyIdx].id, 'zip_code', city.zip);
-                          } else {
-                            setAreas(prev => [...prev, { id: Date.now(), city: city.city, state: 'NC', zip_code: city.zip }]);
-                          }
-                        }
-                      }}
+                      onClick={() => addQuickCity(city.city, city.zip)}
                       disabled={!isLoggedIn}
                       className={`text-xs px-2.5 py-1 rounded-full border transition-colors
                         ${areas.some(a => a.city === city.city)
@@ -743,11 +920,13 @@ export default function ListYourBusiness() {
               </button>
             </section>
 
-            {/* ── Section 4: Work Photos & Logo ──────────────────────── */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 5: Logo and Work Photos                       */}
+            {/* ═══════════════════════════════════════════════════════ */}
             <section className="card p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red text-xs font-bold">4</div>
-                <h2 className="text-xl font-bold text-brand-black">Work Photos &amp; Logo</h2>
+                <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">5</div>
+                <h2 className="text-xl font-bold text-brand-black">Logo and Work Photos</h2>
               </div>
               <p className="text-brand-gray-dark text-sm mb-6 ml-9">
                 Showcase your best work and add your business logo.
@@ -757,7 +936,7 @@ export default function ListYourBusiness() {
                 {/* Logo Upload */}
                 <div>
                   <label className="block text-sm font-medium text-brand-black mb-2">
-                    Business Logo (optional)
+                    Business Logo <span className="text-brand-gray-medium font-normal text-xs">(optional — JPG, PNG, WebP, max 5MB)</span>
                   </label>
                   <div className="flex items-start gap-4">
                     <div
@@ -779,14 +958,11 @@ export default function ListYourBusiness() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-brand-gray-dark">
-                        Upload your business logo (optional). JPG, PNG, or WebP up to 5MB.
-                      </p>
                       {logoPreview && (
                         <button
                           type="button"
                           onClick={() => { setLogoFile(null); setLogoPreview(null); if (logoInputRef.current) logoInputRef.current.value = ''; }}
-                          className="text-sm text-red-500 hover:text-red-700 mt-1"
+                          className="text-sm text-red-500 hover:text-red-700"
                           disabled={!isLoggedIn}
                         >
                           Remove
@@ -807,7 +983,7 @@ export default function ListYourBusiness() {
                 {/* Work Photos Upload */}
                 <div>
                   <label className="block text-sm font-medium text-brand-black mb-2">
-                    Work Photos (optional, up to 10)
+                    Work Photos <span className="text-brand-gray-medium font-normal text-xs">(optional, up to 10 — JPG, PNG, WebP, max 5MB each)</span>
                   </label>
                   <div className="flex flex-wrap gap-3">
                     {photoPreviews.map((preview, index) => (
@@ -827,7 +1003,7 @@ export default function ListYourBusiness() {
                       <div
                         onClick={() => isLoggedIn && photoInputRef.current?.click()}
                         className={`w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors
-                          ${'border-gray-300 hover:border-gray-400'}
+                          border-gray-300 hover:border-gray-400
                           ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}
                         `}
                       >
@@ -841,7 +1017,7 @@ export default function ListYourBusiness() {
                     )}
                   </div>
                   <p className="text-sm text-brand-gray-dark mt-2">
-                    Upload photos of your work. JPG, PNG, or WebP up to 5MB each. {photoFiles.length} / 10
+                    Upload photos of your work. {photoFiles.length} / 10
                   </p>
                   <input
                     ref={photoInputRef}
@@ -856,33 +1032,61 @@ export default function ListYourBusiness() {
               </div>
             </section>
 
-            {/* ── Section 5: Terms ───────────────────────────────────── */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION 6: Provider Agreement                        */}
+            {/* ═══════════════════════════════════════════════════════ */}
             <section className="card p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold text-xs font-bold">5</div>
+                <div className="w-7 h-7 rounded-lg bg-brand-black/10 flex items-center justify-center text-brand-black text-xs font-bold">6</div>
                 <h2 className="text-xl font-bold text-brand-black">Provider Agreement</h2>
               </div>
               <p className="text-brand-gray-dark text-sm mb-4 ml-9">
-                Please review and agree to our terms before submitting your application.
+                Please review and agree before submitting your application.
               </p>
 
-              <label className={`flex items-start gap-3 cursor-pointer ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                <input
-                  type="checkbox"
-                  checked={termsAgreed}
-                  onChange={e => { setTermsAgreed(e.target.checked); setErrors(p => ({ ...p, terms: '' })); }}
-                  className="mt-1 h-4 w-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
-                  disabled={!isLoggedIn}
-                />
-                <span className="text-sm text-brand-gray-dark">
-                  I agree to the{' '}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
-                    Provider Agreement and Terms of Service
-                  </a>
-                  . I understand that MadeWayHomes may introduce paid listing and lead-generation plans in the future and agree to be contacted about these options. I confirm that the information provided is accurate and that I am authorized to represent this business.
-                </span>
-              </label>
-              {errors.terms && <p className="text-red-500 text-xs mt-1 ml-7">{errors.terms}</p>}
+              <div className="space-y-4">
+                {/* Checkbox 1: Accuracy */}
+                <label className={`flex items-start gap-3 cursor-pointer ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={accuracyAgreed}
+                    onChange={e => { setAccuracyAgreed(e.target.checked); setErrors(p => ({ ...p, accuracyAgreed: '' })); }}
+                    className="mt-1 h-4 w-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
+                    disabled={!isLoggedIn}
+                  />
+                  <span className="text-sm text-brand-gray-dark">
+                    I confirm that the information submitted is accurate and that I am authorized to represent this business. I understand that submitting an application does not guarantee approval, customers, or leads.
+                  </span>
+                </label>
+                {errors.accuracyAgreed && <p className="text-red-500 text-xs mt-1 ml-7">{errors.accuracyAgreed}</p>}
+
+                {/* Checkbox 2: Terms */}
+                <label className={`flex items-start gap-3 cursor-pointer ${!isLoggedIn ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={termsAgreed}
+                    onChange={e => { setTermsAgreed(e.target.checked); setErrors(p => ({ ...p, termsAgreed: '' })); }}
+                    className="mt-1 h-4 w-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
+                    disabled={!isLoggedIn}
+                  />
+                  <span className="text-sm text-brand-gray-dark">
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
+                      Provider Agreement
+                    </a>
+                    ,{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
+                      Privacy Policy
+                    </a>
+                    , and{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
+                      Terms of Service
+                    </a>
+                    . I understand that MadeWayHomes may offer optional paid promotional plans in the future.
+                  </span>
+                </label>
+                {errors.termsAgreed && <p className="text-red-500 text-xs mt-1 ml-7">{errors.termsAgreed}</p>}
+              </div>
             </section>
 
             {/* ── Submit ─────────────────────────────────────────────── */}

@@ -775,11 +775,11 @@ export default function RequestService() {
                 className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-red focus:ring-brand-red"
               />
               <span className="text-sm text-brand-gray-dark">
-                I agree to the{' '}
+                I understand that MadeWayHomes is a directory and referral platform. MadeWayHomes does not perform the requested service and does not guarantee the work of any provider. I also agree to the{' '}
                 <Link to="/terms" target="_blank" className="text-brand-red underline hover:text-brand-red-dark">
                   Terms of Service
-                </Link>{' '}
-                and{' '}
+                </Link>
+                {' '}and{' '}
                 <Link to="/privacy" target="_blank" className="text-brand-red underline hover:text-brand-red-dark">
                   Privacy Policy
                 </Link>

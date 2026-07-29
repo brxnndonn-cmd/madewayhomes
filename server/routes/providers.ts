@@ -33,9 +33,16 @@ const storage = multer.diskStorage({
 });
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+const CREDENTIAL_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (ALLOWED_MIMES.includes(file.mimetype)) {
+  if (file.fieldname === 'credential_document') {
+    if (CREDENTIAL_MIMES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Credential document must be PDF, JPG, PNG, or WebP'));
+    }
+  } else if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Only JPG, PNG, and WebP images are allowed'));
@@ -47,7 +54,7 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB each
-    files: 11, // 1 logo + up to 10 work photos
+    files: 12, // 1 logo + up to 10 work photos + 1 credential doc
   },
 });
 
@@ -70,22 +77,32 @@ function ensureTables() {
       insurance_provider TEXT,
       insurance_policy_number TEXT,
       business_hours TEXT,
-      approval_status TEXT NOT NULL DEFAULT 'pending' CHECK(approval_status IN ('pending', 'approved', 'rejected')),
+      approval_status TEXT NOT NULL DEFAULT 'pending_review' CHECK(approval_status IN ('pending_review','changes_requested','approved','published','rejected','suspended')),
+      is_verified INTEGER NOT NULL DEFAULT 0,
+      licensed TEXT DEFAULT 'not_applicable' CHECK(licensed IN ('yes','no','not_applicable')),
+      insured TEXT DEFAULT 'no' CHECK(insured IN ('yes','no')),
+      credential_document_path TEXT,
+      custom_other_service TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
 
   // ── Migrate: add columns if they don't exist ─────────────────
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN license_number TEXT'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_provider TEXT'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_policy_number TEXT'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN licensed TEXT DEFAULT \'not_applicable\''); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insured TEXT DEFAULT \'no\''); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN credential_document_path TEXT'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try { sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN custom_other_service TEXT'); } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+
+  // ── Migrate: update approval_status CHECK to include new statuses ──
   try {
-    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN license_number TEXT');
-  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
-  try {
-    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_provider TEXT');
-  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
-  try {
-    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_policy_number TEXT');
-  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+    // Recreate table is risky, instead just update existing 'pending' to 'pending_review'
+    sqlite.exec("UPDATE provider_profiles SET approval_status = 'pending_review' WHERE approval_status = 'pending'");
+  } catch (e: any) { /* ignore */ }
 
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS provider_services (
@@ -169,20 +186,22 @@ router.get('/me', requireAuth, (req: Request, res: Response) => {
 // ── Validation Schema ─────────────────────────────────────────────────
 const applySchema = z.object({
   business_name: z.string().min(1, 'Business name is required').max(200),
-  owner_name: z.string().max(100).optional(),
+  owner_name: z.string().min(1, 'Owner/contact name is required').max(100),
   phone: z.string().min(1, 'Phone number is required').max(30),
   email: z.string().email('Valid email is required').max(255),
-  website: z.string().max(500).optional().nullable(),
-  facebook: z.string().max(500).optional().nullable(),
-  instagram: z.string().max(500).optional().nullable(),
+  website: z.string().max(500).optional().nullable().or(z.literal('')),
+  facebook: z.string().max(500).optional().nullable().or(z.literal('')),
+  instagram: z.string().max(500).optional().nullable().or(z.literal('')),
   years_in_business: z.coerce.number().int().positive().optional().nullable(),
-  license_number: z.string().max(100).optional().nullable(),
-  insurance_provider: z.string().max(200).optional().nullable(),
-  insurance_policy_number: z.string().max(100).optional().nullable(),
+  licensed: z.enum(['yes', 'no', 'not_applicable']).default('not_applicable'),
+  insured: z.enum(['yes', 'no']).default('no'),
+  license_number: z.string().max(100).optional().nullable().or(z.literal('')),
   description: z.string().min(50, 'Description must be at least 50 characters').max(5000),
   service_categories: z.string().min(1, 'At least one service category is required'), // JSON array string
   service_areas: z.string().min(1, 'At least one service area is required'), // JSON array string
+  custom_other_service: z.string().max(200).optional().nullable().or(z.literal('')),
   terms_agreed: z.string().transform(val => val === 'true' || val === '1'),
+  accuracy_agreed: z.string().transform(val => val === 'true' || val === '1'),
 });
 
 // ── POST /api/providers/apply ─────────────────────────────────────────
@@ -190,6 +209,7 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
   upload.fields([
     { name: 'logo', maxCount: 1 },
     { name: 'photos', maxCount: 10 },
+    { name: 'credential_document', maxCount: 1 },
   ])(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {
@@ -232,7 +252,12 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
 
     // Terms must be agreed
     if (!data.terms_agreed) {
-      res.status(400).json({ error: 'You must agree to the Provider Agreement and Terms of Service' });
+      res.status(400).json({ error: 'You must agree to the Provider Agreement, Privacy Policy, and Terms of Service' });
+      return;
+    }
+
+    if (!data.accuracy_agreed) {
+      res.status(400).json({ error: 'You must confirm the accuracy of your information' });
       return;
     }
 
@@ -277,12 +302,17 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
       }
     }
 
-    // ── Handle logo upload ──────────────────────────────────────────
+    // ── Handle logo and credential upload ──────────────────────────
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
     let logoUrl: string | null = null;
+    let credentialDocPath: string | null = null;
 
     if (files?.logo && files.logo.length > 0) {
       logoUrl = `/uploads/${files.logo[0].filename}`;
+    }
+
+    if (files?.credential_document && files.credential_document.length > 0) {
+      credentialDocPath = `/uploads/${files.credential_document[0].filename}`;
     }
 
     // ── Create provider profile ─────────────────────────────────────
@@ -298,9 +328,11 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
       instagram: data.instagram || null,
       years_in_business: data.years_in_business ?? null,
       license_number: data.license_number || null,
-      insurance_provider: data.insurance_provider || null,
-      insurance_policy_number: data.insurance_policy_number || null,
-      approval_status: 'pending',
+      licensed: data.licensed || 'not_applicable',
+      insured: data.insured || 'no',
+      credential_document_path: credentialDocPath,
+      custom_other_service: data.custom_other_service || null,
+      approval_status: 'pending_review',
     }).returning().get();
 
     // ── Create provider services ────────────────────────────────────
@@ -361,7 +393,7 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
         photos: savedPhotoUrls,
         created_at: result.created_at,
       },
-      message: 'Thank you! We\'ll review your application and get back to you within 1-2 business days.',
+      message: 'Application received. MadeWayHomes will review your business information before publishing your profile. We may contact you if additional information is needed.',
     });
   } catch (err: any) {
     console.error('POST /api/providers/apply error:', err);
@@ -375,7 +407,7 @@ router.get('/', (req: Request, res: Response) => {
     ensureTables();
 
     const { category, city, search } = req.query;
-    const conditions: string[] = ["p.approval_status = 'approved'"];
+    const conditions: string[] = ["(p.approval_status = 'published' OR p.approval_status = 'approved')"];
     const params: any[] = [];
 
     if (category && String(category).trim()) {
@@ -458,7 +490,7 @@ router.get('/:id', (req: Request, res: Response) => {
       return;
     }
 
-    if (provider.approval_status !== 'approved') {
+    if (provider.approval_status !== 'published' && provider.approval_status !== 'approved') {
       res.status(404).json({ error: 'Provider not found' });
       return;
     }

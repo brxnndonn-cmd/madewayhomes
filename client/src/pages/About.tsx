@@ -24,18 +24,18 @@ export default function About() {
             </div>
             <h2 className="text-2xl font-bold text-brand-black mb-4">Our Mission</h2>
             <p className="text-brand-gray-dark leading-relaxed mb-4">
-              MadeWayHomes is a local home-services marketplace connecting homeowners, renters, and property owners
+              MadeWayHomes is a local directory and referral platform connecting homeowners, renters, and property owners
               in Lenoir and Caldwell County, North Carolina with independent local service providers.
             </p>
             <p className="text-brand-gray-dark leading-relaxed mb-4">
               We believe finding reliable help for your home shouldn't be a guessing game. Whether you need a plumber,
               painter, electrician, or landscaper, MadeWayHomes makes it easy to describe what you need and get connected
-              with a trusted local professional.
+              with a local professional.
             </p>
             <p className="text-brand-gray-dark leading-relaxed">
-              Our tagline says it best: <strong className="text-brand-black">Making the way home easier.</strong> We're building a platform
-              that brings Caldwell County together — homeowners getting the help they need, and local businesses
-              growing through real community connections.
+              MadeWayHomes does not perform home services, does not employ providers, and does not guarantee pricing, 
+              availability, workmanship, licensing, insurance, or results. Providers are independent businesses. 
+              Customers should review providers before hiring.
             </p>
           </div>
         </div>
@@ -109,11 +109,7 @@ export default function About() {
           <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 text-sm text-amber-800 leading-relaxed flex items-start gap-3">
             <span className="text-xl flex-shrink-0">⚠️</span>
             <div>
-              <strong>Important disclaimer:</strong> MadeWayHomes is a marketing and lead-generation platform,
-              not a real estate brokerage. Service providers listed on our platform are independent businesses,
-              not employees or contractors of MadeWayHomes. We do not guarantee the quality of work, availability
-              of providers, or that any particular service request will be fulfilled. Always do your own due
-              diligence when hiring a service provider.
+              <strong>Important disclaimer:</strong> MadeWayHomes is a directory and referral platform, not a real estate brokerage or home services company. Service providers listed on our platform are independent businesses, not employees or contractors of MadeWayHomes. We do not guarantee the quality of work, availability of providers, pricing, or that any particular service request will be fulfilled. A Verified badge means certain provider information was reviewed — it does not guarantee quality. Always do your own due diligence when hiring a service provider. See our <Link to="/disclaimer" className="text-amber-900 underline font-medium">full disclaimer</Link>.
             </div>
           </div>
         </div>

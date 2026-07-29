@@ -12,6 +12,7 @@ import publicRoutes from './routes/public';
 import requestRoutes from './routes/requests';
 import providerRoutes from './routes/providers';
 import notificationRoutes from './routes/notifications';
+import { runMigrations } from './db/migrate';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,6 +74,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // ── Start Server ───────────────────────────────────────────────────
+runMigrations();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 MadeWayHomes server running on http://0.0.0.0:${PORT}`);
   console.log(`   Environment: ${isProduction ? 'production' : 'development'}`);

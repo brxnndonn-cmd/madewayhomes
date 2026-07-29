@@ -49,7 +49,9 @@ router.get('/users', (_req: Request, res: Response) => {
 
 // ── GET /api/admin/providers/pending ────────────────────────────────
 router.get('/providers/pending', (_req: Request, res: Response) => {
-  const pending = db.select().from(providerProfiles).where(eq(providerProfiles.approval_status, 'pending')).all();
+  const pending = db.select().from(providerProfiles).where(
+    eq(providerProfiles.approval_status, 'pending_review')
+  ).all();
   res.json({ providers: pending });
 });
 
@@ -98,12 +100,20 @@ router.get('/providers', (_req: Request, res: Response) => {
   }
 });
 
-// ── POST /api/admin/providers/:id/approve ───────────────────────────
-router.post('/providers/:id/approve', (req: Request, res: Response) => {
+// ── POST /api/admin/providers/:id/status ───────────────────────────
+// Unified status update: approve, reject, publish, unpublish, suspend, request_changes
+router.post('/providers/:id/status', (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
       res.status(400).json({ error: 'Invalid provider ID' });
+      return;
+    }
+
+    const { status } = req.body;
+    const validStatuses = ['approved', 'rejected', 'published', 'pending_review', 'changes_requested', 'suspended'];
+    if (!status || !validStatuses.includes(status)) {
+      res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
       return;
     }
 
@@ -114,29 +124,49 @@ router.post('/providers/:id/approve', (req: Request, res: Response) => {
     }
 
     db.update(providerProfiles)
-      .set({ approval_status: 'approved', updated_at: new Date().toISOString() })
+      .set({ approval_status: status, updated_at: new Date().toISOString() })
       .where(eq(providerProfiles.id, id))
       .run();
 
     // Notify the provider
-    notifyUser(
-      provider.user_id,
-      'application_approved',
-      `Application Approved — ${provider.business_name}`,
-      `Your business "${provider.business_name}" is now listed on MadeWayHomes! Customers can now find and request your services.`,
-      { provider_id: id }
-    );
+    const statusMessages: Record<string, { title: string; message: string }> = {
+      approved: {
+        title: `Application Approved — ${provider.business_name}`,
+        message: `Your business "${provider.business_name}" has been approved. It will be visible once published.`,
+      },
+      published: {
+        title: `Profile Published — ${provider.business_name}`,
+        message: `Your business "${provider.business_name}" is now live on MadeWayHomes! Customers can find and request your services.`,
+      },
+      rejected: {
+        title: `Application Update — ${provider.business_name}`,
+        message: `Your application for "${provider.business_name}" was not approved. Please contact us for more information.`,
+      },
+      changes_requested: {
+        title: `Changes Requested — ${provider.business_name}`,
+        message: `We need additional information for your application "${provider.business_name}". Please update your profile.`,
+      },
+      suspended: {
+        title: `Profile Suspended — ${provider.business_name}`,
+        message: `Your profile "${provider.business_name}" has been temporarily suspended. Please contact us for more information.`,
+      },
+    };
+
+    const msg = statusMessages[status];
+    if (msg) {
+      notifyUser(provider.user_id, `application_${status}`, msg.title, msg.message, { provider_id: id });
+    }
 
     const updated = db.select().from(providerProfiles).where(eq(providerProfiles.id, id)).get();
     res.json({ provider: updated });
   } catch (err: any) {
-    console.error('POST /api/admin/providers/:id/approve error:', err);
-    res.status(500).json({ error: 'Failed to approve provider' });
+    console.error('POST /api/admin/providers/:id/status error:', err);
+    res.status(500).json({ error: 'Failed to update provider status' });
   }
 });
 
-// ── POST /api/admin/providers/:id/reject ────────────────────────────
-router.post('/providers/:id/reject', (req: Request, res: Response) => {
+// ── POST /api/admin/providers/:id/verify ────────────────────────────
+router.post('/providers/:id/verify', (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -150,25 +180,40 @@ router.post('/providers/:id/reject', (req: Request, res: Response) => {
       return;
     }
 
+    const { verified } = req.body; // true or false
     db.update(providerProfiles)
-      .set({ approval_status: 'rejected', updated_at: new Date().toISOString() })
+      .set({ is_verified: verified ? 1 : 0, updated_at: new Date().toISOString() })
       .where(eq(providerProfiles.id, id))
       .run();
-
-    // Notify the provider
-    notifyUser(
-      provider.user_id,
-      'application_rejected',
-      `Application Update — ${provider.business_name}`,
-      `Your application for "${provider.business_name}" needs attention. Please contact us for more information.`,
-      { provider_id: id }
-    );
 
     const updated = db.select().from(providerProfiles).where(eq(providerProfiles.id, id)).get();
     res.json({ provider: updated });
   } catch (err: any) {
-    console.error('POST /api/admin/providers/:id/reject error:', err);
-    res.status(500).json({ error: 'Failed to reject provider' });
+    console.error('POST /api/admin/providers/:id/verify error:', err);
+    res.status(500).json({ error: 'Failed to update verification status' });
+  }
+});
+
+// ── DELETE /api/admin/providers/:id ──────────────────────────────────
+router.delete('/providers/:id', (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'Invalid provider ID' });
+      return;
+    }
+
+    const provider = db.select().from(providerProfiles).where(eq(providerProfiles.id, id)).get();
+    if (!provider) {
+      res.status(404).json({ error: 'Provider not found' });
+      return;
+    }
+
+    db.delete(providerProfiles).where(eq(providerProfiles.id, id)).run();
+    res.json({ success: true, message: 'Provider deleted' });
+  } catch (err: any) {
+    console.error('DELETE /api/admin/providers/:id error:', err);
+    res.status(500).json({ error: 'Failed to delete provider' });
   }
 });
 
@@ -187,7 +232,7 @@ router.put('/providers/:id', (req: Request, res: Response) => {
       return;
     }
 
-    const { business_name, description, phone, email, website, facebook, instagram, years_in_business } = req.body;
+    const { business_name, description, phone, email, website, facebook, instagram, years_in_business, licensed, insured, license_number, custom_other_service } = req.body;
 
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
     if (business_name !== undefined) updates.business_name = business_name;
@@ -198,6 +243,10 @@ router.put('/providers/:id', (req: Request, res: Response) => {
     if (facebook !== undefined) updates.facebook = facebook;
     if (instagram !== undefined) updates.instagram = instagram;
     if (years_in_business !== undefined) updates.years_in_business = years_in_business;
+    if (licensed !== undefined) updates.licensed = licensed;
+    if (insured !== undefined) updates.insured = insured;
+    if (license_number !== undefined) updates.license_number = license_number;
+    if (custom_other_service !== undefined) updates.custom_other_service = custom_other_service;
 
     db.update(providerProfiles).set(updates).where(eq(providerProfiles.id, id)).run();
 

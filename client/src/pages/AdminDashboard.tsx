@@ -29,11 +29,19 @@ interface Provider {
   phone: string | null;
   email: string | null;
   website: string | null;
+  logo_url: string | null;
   approval_status: string;
+  is_verified: number;
+  licensed: string;
+  insured: string;
+  license_number: string | null;
+  credential_document_path: string | null;
+  custom_other_service: string | null;
   user_name: string;
   user_email: string;
   services: { name: string; category_id: number }[];
   areas: { id: number; city: string; state: string; zip_code: string | null }[];
+  images: string[];
   created_at: string;
 }
 
@@ -79,13 +87,20 @@ interface Stats {
 
 const statusColors: Record<string, string> = {
   new: 'tag tag-red',
+  reviewing: 'tag tag-gold',
+  sent_to_provider: 'tag bg-blue-100 text-blue-700 border-blue-200',
+  contacted: 'tag bg-purple-100 text-purple-700 border-purple-200',
+  completed: 'tag bg-green-100 text-green-700 border-green-200',
+  closed: 'tag bg-red-100 text-red-700 border-red-200',
   matched: 'tag tag-gold',
   in_progress: 'tag bg-orange-100 text-orange-700 border-orange-200',
-  completed: 'tag bg-green-100 text-green-700 border-green-200',
   canceled: 'tag bg-red-100 text-red-700 border-red-200',
-  pending: 'tag tag-gold',
-  approved: 'tag bg-green-100 text-green-700 border-green-200',
+  pending_review: 'tag tag-gold',
+  changes_requested: 'tag bg-orange-100 text-orange-700 border-orange-200',
+  approved: 'tag bg-blue-100 text-blue-700 border-blue-200',
+  published: 'tag bg-green-100 text-green-700 border-green-200',
   rejected: 'tag bg-red-100 text-red-700 border-red-200',
+  suspended: 'tag bg-gray-100 text-gray-700 border-gray-200',
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -174,25 +189,48 @@ export default function AdminDashboard() {
 
   // ── Actions ────────────────────────────────────────────────────────
 
-  const handleApprove = async (id: number) => {
-    if (!confirm('Approve this provider?')) return;
+  const handleProviderStatus = async (id: number, status: string) => {
+    const labels: Record<string, string> = {
+      approved: 'Approve',
+      rejected: 'Reject',
+      published: 'Publish',
+      changes_requested: 'Request Changes',
+      suspended: 'Suspend',
+    };
+    if (!confirm(`${labels[status] || status} this provider?`)) return;
     try {
-      await apiFetch(`/admin/providers/${id}/approve`, { method: 'POST' });
-      showToast('success', 'Provider approved');
+      await apiFetch(`/admin/providers/${id}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      });
+      showToast('success', `Provider ${status.replace('_', ' ')}`);
       fetchAll();
     } catch (err: any) {
-      showToast('error', err.data?.error || 'Failed to approve');
+      showToast('error', err.data?.error || 'Failed to update provider');
     }
   };
 
-  const handleReject = async (id: number) => {
-    if (!confirm('Reject this provider?')) return;
+  const handleProviderVerify = async (id: number, verified: boolean) => {
     try {
-      await apiFetch(`/admin/providers/${id}/reject`, { method: 'POST' });
-      showToast('success', 'Provider rejected');
+      await apiFetch(`/admin/providers/${id}/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ verified }),
+      });
+      showToast('success', verified ? 'Provider verified' : 'Verification removed');
       fetchAll();
     } catch (err: any) {
-      showToast('error', err.data?.error || 'Failed to reject');
+      showToast('error', err.data?.error || 'Failed to update verification');
+    }
+  };
+
+  const handleDeleteProvider = async (id: number) => {
+    if (!confirm('Permanently delete this provider? This cannot be undone.')) return;
+    try {
+      await apiFetch(`/admin/providers/${id}`, { method: 'DELETE' });
+      showToast('success', 'Provider deleted');
+      fetchAll();
+    } catch (err: any) {
+      showToast('error', err.data?.error || 'Failed to delete provider');
     }
   };
 
@@ -569,9 +607,13 @@ export default function AdminDashboard() {
             >
               <option value="all">All Statuses</option>
               <option value="new">New</option>
+              <option value="reviewing">Reviewing</option>
+              <option value="sent_to_provider">Sent to Provider</option>
+              <option value="contacted">Contacted</option>
+              <option value="completed">Completed</option>
+              <option value="closed">Closed</option>
               <option value="matched">Matched</option>
               <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
               <option value="canceled">Canceled</option>
             </select>
             <input
@@ -676,9 +718,12 @@ export default function AdminDashboard() {
               className="input-field sm:w-auto text-sm"
             >
               <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
+              <option value="pending_review">Pending Review</option>
+              <option value="changes_requested">Changes Requested</option>
               <option value="approved">Approved</option>
+              <option value="published">Published</option>
               <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
             </select>
             <input
               type="text"
@@ -731,24 +776,42 @@ export default function AdminDashboard() {
                           <td className="px-4 py-3"><StatusBadge status={p.approval_status} /></td>
                           <td className="px-4 py-3 text-brand-gray-dark whitespace-nowrap">{formatDate(p.created_at)}</td>
                           <td className="px-4 py-3">
-                            {p.approval_status === 'pending' && (
-                              <div className="flex gap-1">
-                                <button onClick={(e) => { e.stopPropagation(); handleApprove(p.id); }} className="btn-primary text-xs px-2 py-1">
-                                  Approve
+                            <div className="flex gap-1 flex-wrap">
+                              {p.approval_status === 'pending_review' && (
+                                <>
+                                  <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'approved'); }} className="btn-primary text-xs px-2 py-1">
+                                    Approve
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'rejected'); }} className="btn-secondary text-xs px-2 py-1">
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {p.approval_status === 'approved' && (
+                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'published'); }} className="btn-primary text-xs px-2 py-1">
+                                  Publish
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); handleReject(p.id); }} className="btn-secondary text-xs px-2 py-1">
-                                  Reject
+                              )}
+                              {p.approval_status === 'published' && (
+                                <button onClick={(e) => { e.stopPropagation(); handleProviderStatus(p.id, 'approved'); }} className="btn-secondary text-xs px-2 py-1">
+                                  Unpublish
                                 </button>
-                              </div>
-                            )}
-                            {p.approval_status === 'approved' && (
+                              )}
+                              {(p.approval_status === 'approved' || p.approval_status === 'published') && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleProviderVerify(p.id, !p.is_verified); }}
+                                  className={`text-xs px-2 py-1 ${p.is_verified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'} rounded font-medium`}
+                                >
+                                  {p.is_verified ? '✓ Verified' : 'Verify'}
+                                </button>
+                              )}
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleEditProvider(p); }}
-                                className="text-brand-red hover:text-brand-red-dark text-xs font-medium"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteProvider(p.id); }}
+                                className="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded font-medium"
                               >
-                                Edit
+                                Delete
                               </button>
-                            )}
+                            </div>
                           </td>
                         </tr>
                         {expandedProvider === p.id && (
@@ -930,10 +993,11 @@ function RequestDetails({
               className="input-field text-sm w-auto"
             >
               <option value="new">New</option>
-              <option value="matched">Matched</option>
-              <option value="in_progress">In Progress</option>
+              <option value="reviewing">Reviewing</option>
+              <option value="sent_to_provider">Sent to Provider</option>
+              <option value="contacted">Contacted</option>
               <option value="completed">Completed</option>
-              <option value="canceled">Canceled</option>
+              <option value="closed">Closed</option>
             </select>
           </div>
         </div>
@@ -1056,6 +1120,36 @@ function ProviderDetails({
 
   return (
     <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Business Name</p>
+          <p className="text-brand-black font-semibold">{provider.business_name}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Status</p>
+          <p className="text-brand-black"><StatusBadge status={provider.approval_status} /></p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Verified</p>
+          <p className="text-brand-black">{provider.is_verified ? '✅ Yes' : '❌ No'}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Licensed</p>
+          <p className="text-brand-black capitalize">{provider.licensed?.replace('_', ' ') || 'Not specified'}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Insured</p>
+          <p className="text-brand-black capitalize">{provider.insured || 'Not specified'}</p>
+        </div>
+        {provider.license_number && (
+          <div>
+            <p className="text-xs font-medium text-brand-gray-dark uppercase">License Number</p>
+            <p className="text-brand-black">{provider.license_number}</p>
+          </div>
+        )}
+      </div>
       <div>
         <p className="text-xs font-medium text-brand-gray-dark uppercase">Description</p>
         <p className="text-brand-black">{provider.description || 'No description'}</p>
@@ -1076,11 +1170,61 @@ function ProviderDetails({
           {provider.services.length > 0 ? provider.services.map(s => s.name).join(', ') : 'None listed'}
         </p>
       </div>
+      {provider.custom_other_service && (
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Other Service</p>
+          <p className="text-brand-black">{provider.custom_other_service}</p>
+        </div>
+      )}
       <div>
         <p className="text-xs font-medium text-brand-gray-dark uppercase">Service Areas</p>
         <p className="text-brand-black">
-          {provider.areas.length > 0 ? provider.areas.map(a => `${a.city}, ${a.state}`).join('; ') : 'None listed'}
+          {provider.areas.length > 0 ? provider.areas.map(a => `${a.city}, ${a.state}${a.zip_code ? ' ' + a.zip_code : ''}`).join('; ') : 'None listed'}
         </p>
+      </div>
+      {/* Credential Document */}
+      <div>
+        <p className="text-xs font-medium text-brand-gray-dark uppercase">🔒 Credential Document</p>
+        {provider.credential_document_path ? (
+          <a
+            href={provider.credential_document_path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-red hover:underline text-sm"
+          >
+            View uploaded document
+          </a>
+        ) : (
+          <p className="text-brand-gray-dark text-sm">No document uploaded</p>
+        )}
+      </div>
+      {/* Logo */}
+      {provider.logo_url && (
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Logo</p>
+          <img src={provider.logo_url} alt="Logo" className="w-20 h-20 object-cover rounded-lg border" />
+        </div>
+      )}
+      {/* Work Photos */}
+      {provider.images && provider.images.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Work Photos ({provider.images.length})</p>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {provider.images.map((img: string, i: number) => (
+              <img key={i} src={img} alt={`Work ${i+1}`} className="w-16 h-16 object-cover rounded border" />
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Contact Name</p>
+          <p className="text-brand-black">{provider.user_name}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-brand-gray-dark uppercase">Contact Email</p>
+          <p className="text-brand-black">{provider.user_email}</p>
+        </div>
       </div>
     </div>
   );

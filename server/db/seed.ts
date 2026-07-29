@@ -87,7 +87,12 @@ async function seed() {
       insurance_provider TEXT,
       insurance_policy_number TEXT,
       business_hours TEXT,
-      approval_status TEXT NOT NULL DEFAULT 'pending',
+      approval_status TEXT NOT NULL DEFAULT 'pending_review',
+      is_verified INTEGER NOT NULL DEFAULT 0,
+      licensed TEXT DEFAULT 'not_applicable',
+      insured TEXT DEFAULT 'no',
+      credential_document_path TEXT,
+      custom_other_service TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -211,7 +216,7 @@ async function seed() {
       email: 'dave@blueridgepw.example.com',
       website: 'https://blueridgepw.example.com',
       years: 4,
-      status: 'pending',
+      status: 'pending_review',
       categories: [4, 14], // painting, pressure-washing
       areas: ['Lenoir', 'Hudson', 'Gamewell'],
     },
@@ -225,7 +230,7 @@ async function seed() {
       email: 'lisa@caldwellmoving.example.com',
       website: null,
       years: 3,
-      status: 'pending',
+      status: 'pending_review',
       categories: [10, 17, 18, 19, 20, 22], // moving, junk-removal, furniture-assembly, home-organization, moving-assistance, rental-turnover
       areas: ['Lenoir', 'Granite Falls', 'Hudson', 'Sawmills', 'Gamewell'],
     },
@@ -253,7 +258,7 @@ async function seed() {
       email: 'rachel@freshlook.example.com',
       website: null,
       years: 2,
-      status: 'pending',
+      status: 'pending_review',
       categories: [4, 21], // painting, mobile-car-detailing
       areas: ['Lenoir', 'Hudson', 'Sawmills'],
     },
@@ -307,8 +312,10 @@ async function seed() {
     }
   }
 
+  const approvedCount = demoProviders.filter(p => p.status === 'approved').length;
+  const pendingCount = demoProviders.filter(p => p.status === 'pending_review').length;
   console.log(`✅ ${demoProviders.length} demo providers created (all use password: Provider1!)`);
-  console.log(`   Approved: ${demoProviders.filter(p => p.status === 'approved').length}, Pending: ${demoProviders.filter(p => p.status === 'pending').length}`);
+  console.log(`   Approved: ${approvedCount}, Pending Review: ${pendingCount}`);
 
   // ── Create service categories ─────────────────────────────────────
   // Merge original categories with MVP owner-specified categories
@@ -323,22 +330,28 @@ async function seed() {
     { name: 'Roofing', slug: 'roofing', description: 'Repair, replacement, inspections', icon: '🏠', sort: 7, price: 500 },
     { name: 'Carpentry', slug: 'carpentry', description: 'Framing, trim work, custom builds', icon: '🪚', sort: 8, price: 400 },
     { name: 'Flooring', slug: 'flooring', description: 'Hardwood, tile, carpet, vinyl', icon: '🟫', sort: 9, price: 400 },
-    { name: 'Moving', slug: 'moving', description: 'Local moving, loading, unloading', icon: '📦', sort: 10, price: 400 },
+    { name: 'Moving Services', slug: 'moving', description: 'Local moving, loading, unloading', icon: '📦', sort: 10, price: 400 },
     { name: 'Pest Control', slug: 'pest-control', description: 'Insects, rodents, termite treatment', icon: '🐜', sort: 11, price: 300 },
-    { name: 'Handyman', slug: 'handyman', description: 'General repairs, assembly, odd jobs', icon: '🔨', sort: 12, price: 300 },
+    { name: 'Handyman Services', slug: 'handyman', description: 'General repairs, assembly, odd jobs', icon: '🔨', sort: 12, price: 300 },
     // MVP owner-specified additions
     { name: 'Lawn Care', slug: 'lawn-care', description: 'Mowing, trimming, fertilizing, yard cleanup', icon: '🌱', sort: 13, price: 300 },
     { name: 'Pressure Washing', slug: 'pressure-washing', description: 'Driveways, siding, decks, patio cleaning', icon: '💦', sort: 14, price: 300 },
     { name: 'House Cleaning', slug: 'house-cleaning', description: 'Deep clean, regular maid service, move-in/out', icon: '🏡', sort: 15, price: 300 },
-    { name: 'Property Cleaning', slug: 'property-cleaning', description: 'Commercial and rental property cleaning', icon: '🧼', sort: 16, price: 300 },
+    // Additional required categories
+    { name: 'Tree Services', slug: 'tree-services', description: 'Tree trimming, removal, stump grinding, arborist', icon: '🌳', sort: 16, price: 400 },
     { name: 'Junk Removal', slug: 'junk-removal', description: 'Furniture, appliances, yard waste removal', icon: '🗑️', sort: 17, price: 300 },
-    { name: 'Furniture Assembly', slug: 'furniture-assembly', description: 'Flat-pack furniture assembly and installation', icon: '🪑', sort: 18, price: 200 },
-    { name: 'Home Organization', slug: 'home-organization', description: 'Decluttering, closet systems, garage organization', icon: '📋', sort: 19, price: 200 },
-    { name: 'Moving Assistance', slug: 'moving-assistance', description: 'Loading help, local moves, labor only', icon: '🚛', sort: 20, price: 350 },
-    { name: 'Mobile Car Detailing', slug: 'mobile-car-detailing', description: 'On-site auto detailing at your location', icon: '🚗', sort: 21, price: 250 },
-    { name: 'Rental-Property Turnover', slug: 'rental-turnover', description: 'Clean, paint, repair between tenants', icon: '🔑', sort: 22, price: 400 },
-    { name: 'Real Estate Photography', slug: 'real-estate-photography', description: 'Professional listing photos and drone shots', icon: '📷', sort: 23, price: 350 },
-    { name: 'General Home-Service', slug: 'general-home-service', description: 'General home service requests and odd jobs', icon: '🏡', sort: 24, price: 200 },
+    { name: 'Appliance Repair', slug: 'appliance-repair', description: 'Washer, dryer, fridge, oven, dishwasher repair', icon: '🔌', sort: 18, price: 350 },
+    { name: 'Concrete Services', slug: 'concrete-services', description: 'Driveways, patios, foundations, stamped concrete', icon: '🧱', sort: 19, price: 500 },
+    { name: 'General Contracting', slug: 'general-contracting', description: 'Home construction, additions, major renovations', icon: '🏗️', sort: 20, price: 600 },
+    { name: 'Home Remodeling', slug: 'home-remodeling', description: 'Kitchen, bathroom, basement, whole-home remodeling', icon: '🔨', sort: 21, price: 600 },
+    // Keep legacy slugs for compatibility
+    { name: 'Furniture Assembly', slug: 'furniture-assembly', description: 'Flat-pack furniture assembly and installation', icon: '🪑', sort: 22, price: 200 },
+    { name: 'Home Organization', slug: 'home-organization', description: 'Decluttering, closet systems, garage organization', icon: '📋', sort: 23, price: 200 },
+    { name: 'Moving Assistance', slug: 'moving-assistance', description: 'Loading help, local moves, labor only', icon: '🚛', sort: 24, price: 350 },
+    { name: 'Mobile Car Detailing', slug: 'mobile-car-detailing', description: 'On-site auto detailing at your location', icon: '🚗', sort: 25, price: 250 },
+    { name: 'Rental-Property Turnover', slug: 'rental-turnover', description: 'Clean, paint, repair between tenants', icon: '🔑', sort: 26, price: 400 },
+    { name: 'Real Estate Photography', slug: 'real-estate-photography', description: 'Professional listing photos and drone shots', icon: '📷', sort: 27, price: 350 },
+    { name: 'General Home-Service', slug: 'general-home-service', description: 'General home service requests and odd jobs', icon: '🏡', sort: 28, price: 200 },
   ];
 
   const insertCategory = sqlite.prepare(`

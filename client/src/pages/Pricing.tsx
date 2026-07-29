@@ -5,14 +5,14 @@ const PLANS = [
     name: 'Free Listing',
     price: '$0',
     period: '/mo',
-    description: 'Get listed in our directory and start receiving leads.',
+    description: 'Basic business profile with essential features.',
     features: [
-      'Basic profile in provider directory',
-      'Receive lead notifications',
-      'Up to 5 work photos',
-      'Directory visibility in Caldwell County',
+      'Basic business profile',
+      'Services and service areas',
+      'Contact information',
+      'Limited work photos',
     ],
-    cta: 'Apply Now — It\'s Free',
+    cta: 'Join Free',
     link: '/list-your-business',
     highlighted: false,
     badge: null,
@@ -21,16 +21,15 @@ const PLANS = [
     name: 'Featured Listing',
     price: '$49',
     period: '/mo',
-    description: 'Stand out from the crowd with priority placement.',
+    description: 'Higher placement and enhanced visibility.',
     features: [
-      'Everything in Free Listing',
-      'Priority placement in search results',
-      'Highlighted profile with Featured badge',
-      'Up to 10 work photos',
-      'Featured on category pages',
-      'More visibility to customers',
+      'Higher placement in search results',
+      'Featured provider label',
+      'More work photos',
+      'Enhanced business profile',
+      'Priority visibility',
     ],
-    cta: 'Contact Us to Join',
+    cta: 'Contact Us',
     link: '/contact',
     highlighted: true,
     badge: 'Most Popular',
@@ -39,17 +38,15 @@ const PLANS = [
     name: 'Premium Partner',
     price: '$99',
     period: '/mo',
-    description: 'Maximum exposure and priority lead matching.',
+    description: 'Maximum exposure and priority opportunities.',
     features: [
-      'Everything in Featured Listing',
-      'Top of search results',
-      'Featured on homepage',
-      'Priority lead matching',
-      'Premium Partner badge',
-      'Unlimited work photos',
-      'Dedicated support',
+      'Top placement in selected categories',
+      'Enhanced profile',
+      'Priority lead opportunities',
+      'Expanded service areas',
+      'Additional promotional options',
     ],
-    cta: 'Contact Us to Join',
+    cta: 'Contact Us',
     link: '/contact',
     highlighted: false,
     badge: 'Best Value',
@@ -75,11 +72,10 @@ export default function Pricing() {
       {/* ── Pricing Cards ────────────────────────────────────────── */}
       <section className="py-16 bg-brand-gray">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Coming Soon Banner */}
+          {/* Launch Notice */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-10 max-w-3xl mx-auto text-center">
             <p className="text-amber-800 text-sm">
-              <strong>💰 Payments coming soon!</strong> Online signup and payment processing are not yet available.
-              For now, use the "Contact Us to Join" option and we'll get you set up manually.
+              <strong>Paid plans are not currently active.</strong> Founding providers can join free during the MadeWayHomes local launch.
             </p>
           </div>
 
@@ -174,8 +170,8 @@ export default function Pricing() {
           <div className="space-y-6">
             {[
               {
-                q: 'When will online payments be available?',
-                a: 'We\'re working on integrating secure payment processing. In the meantime, we handle plan setup manually — just contact us and we\'ll get you started.',
+                q: 'When will paid plans be available?',
+                a: 'Paid promotional plans are planned for a future release. During the local launch period, all founding providers can join free with no payment information required.',
               },
               {
                 q: 'Can I switch plans later?',
@@ -186,8 +182,8 @@ export default function Pricing() {
                 a: 'No. All plans are month-to-month. You can cancel anytime with no penalty.',
               },
               {
-                q: 'What does "priority lead matching" mean?',
-                a: 'Premium partners receive new leads before other providers. This means you get first access to customer requests that match your services and area.',
+                q: 'What does "priority lead opportunities" mean?',
+                a: 'Premium partners receive first access to customer requests that match your services and area before other providers.',
               },
             ].map((faq, i) => (
               <div key={i} className="card p-5">
