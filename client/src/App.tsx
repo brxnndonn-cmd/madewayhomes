@@ -22,6 +22,7 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Pricing from './pages/Pricing';
 import Disclaimer from './pages/Disclaimer';
+import SampleLanding from './pages/SampleLanding';
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/providers/:id" element={<ProviderProfile />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/disclaimer" element={<Disclaimer />} />
+        <Route path="/demo-landing" element={<SampleLanding />} />
 
         {/* Auth Pages */}
         <Route path="/login" element={<Login />} />
