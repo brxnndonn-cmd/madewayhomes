@@ -214,11 +214,17 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), async (req: 
       details: JSON.stringify({ email }),
     }).run();
 
-    // In dev, return the token in the response (no email sending yet)
-    res.json({
-      message: 'Password reset token generated.',
-      resetToken, // REMOVE in production when email is configured
-    });
+    // Only return the reset token in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      res.json({
+        message: 'Password reset token generated.',
+        resetToken,
+      });
+    } else {
+      res.json({
+        message: 'If an account exists with that email, a reset token has been generated.',
+      });
+    }
   } catch (err) {
     console.error('Forgot password error:', err);
     res.status(500).json({ error: 'Internal server error' });

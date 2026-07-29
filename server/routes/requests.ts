@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 const router = Router();
 
 // ── Multer Configuration ──────────────────────────────────────────────
-const uploadsDir = path.resolve(__dirname, '../../data/uploads');
+const uploadsDir = path.resolve(__dirname, '../../data/uploads/public');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
