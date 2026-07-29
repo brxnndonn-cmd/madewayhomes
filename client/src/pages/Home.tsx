@@ -45,6 +45,7 @@ const CITIES = ['Lenoir', 'Granite Falls', 'Hudson', 'Gamewell', 'Sawmills', "Ca
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProviders, setFeaturedProviders] = useState<Provider[]>([]);
+  const [categoryCount, setCategoryCount] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [location, setLocation] = useState('');
   const [email, setEmail] = useState('');
@@ -61,6 +62,7 @@ export default function Home() {
           apiFetch('/providers/featured', { skipAuth: true }),
         ]);
         setCategories(catRes.categories || []);
+        setCategoryCount(catRes.categories?.length || 0);
         setFeaturedProviders(provRes.providers || []);
       } catch (_) {}
       setDataLoaded(true);
@@ -133,15 +135,15 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Trust indicators */}
+            {/* Trust indicators — using real data where available */}
             <div className="mt-12 flex flex-wrap justify-center gap-6 sm:gap-12">
               <div className="stat-card text-white">
-                <div className="stat-number !text-white">50+</div>
+                <div className="stat-number !text-white">{categoryCount > 0 ? `${categoryCount}+` : '24'}</div>
                 <div className="stat-label !text-white/60">Service Categories</div>
               </div>
               <div className="stat-card text-white">
-                <div className="stat-number !text-white">100%</div>
-                <div className="stat-label !text-white/60">Local Providers</div>
+                <div className="stat-number !text-white">Local</div>
+                <div className="stat-label !text-white/60">Serving Caldwell County</div>
               </div>
               <div className="stat-card text-white">
                 <div className="stat-number !text-white">Free</div>
@@ -280,9 +282,6 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-bold text-brand-black">{provider.business_name}</h3>
-                      <div className="flex items-center gap-1 text-brand-gold text-sm">
-                        {'★'.repeat(5)}
-                      </div>
                     </div>
                   </div>
                   <span className="tag tag-red self-start mb-3 text-xs">Approved Provider</span>

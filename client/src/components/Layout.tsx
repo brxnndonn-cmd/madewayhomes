@@ -51,6 +51,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link to="/" className="nav-link">Home</Link>
               <Link to="/providers" className="nav-link">Find a Pro</Link>
               <Link to="/how-it-works" className="nav-link">How It Works</Link>
+              <Link to="/pricing" className="nav-link">Pricing</Link>
               <Link to="/about" className="nav-link">About</Link>
               <Link to="/contact" className="nav-link">Contact</Link>
 
@@ -142,6 +143,7 @@ export default function Layout({ children }: LayoutProps) {
             <Link to="/" onClick={closeMobile} className="mobile-nav-link">🏠 Home</Link>
             <Link to="/providers" onClick={closeMobile} className="mobile-nav-link">🔍 Find a Pro</Link>
             <Link to="/how-it-works" onClick={closeMobile} className="mobile-nav-link">📋 How It Works</Link>
+            <Link to="/pricing" onClick={closeMobile} className="mobile-nav-link">💰 Pricing</Link>
             <Link to="/about" onClick={closeMobile} className="mobile-nav-link">ℹ️ About</Link>
             <Link to="/contact" onClick={closeMobile} className="mobile-nav-link">💬 Contact</Link>
             <Link to="/request" onClick={closeMobile} className="mobile-nav-link !text-brand-red !font-semibold">📝 Request a Service</Link>
@@ -203,6 +205,7 @@ export default function Layout({ children }: LayoutProps) {
                 <li><Link to="/request" className="footer-link">Request a Service</Link></li>
                 <li><Link to="/providers" className="footer-link">Find a Pro</Link></li>
                 <li><Link to="/how-it-works" className="footer-link">How It Works</Link></li>
+                <li><Link to="/pricing" className="footer-link">Pricing</Link></li>
                 <li><Link to="/services" className="footer-link">Browse Services</Link></li>
               </ul>
             </div>
@@ -232,6 +235,7 @@ export default function Layout({ children }: LayoutProps) {
               <ul className="space-y-2.5 text-sm text-gray-400">
                 <li><Link to="/privacy" className="footer-link">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="footer-link">Terms of Service</Link></li>
+                <li><Link to="/disclaimer" className="footer-link">Disclaimer</Link></li>
               </ul>
             </div>
           </div>

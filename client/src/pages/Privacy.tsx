@@ -1,10 +1,5 @@
-{/* <!--
-  ⚠️ IMPORTANT: This is a template privacy policy. 
-  Review with legal counsel before launch.
-  Last template update: 2024
---> */}
 export default function Privacy() {
-  const lastUpdated = '2024';
+  const lastUpdated = '2026';
   const companyName = 'MadeWayHomes';
   const contactEmail = 'hello@madewayhomes.com';
 
@@ -23,6 +18,14 @@ export default function Privacy() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="card p-8 sm:p-10">
             <div className="space-y-8 text-brand-gray-dark leading-relaxed">
+
+            {/* Template Notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm">
+              <p className="text-amber-800">
+                <strong>⚠️ Note:</strong> This privacy policy is provided as a template and has not been reviewed by legal counsel.
+              </p>
+            </div>
+
             <p>
               This Privacy Policy describes how {companyName} ("we," "our," or "us") collects, uses, 
               and shares information when you use our website and services (the "Platform").
@@ -155,6 +158,12 @@ export default function Privacy() {
                 </a>
               </p>
               <p className="text-sm mt-2">MadeWayHomes — Lenoir, Caldwell County, North Carolina</p>
+              <p className="text-sm mt-1">
+                Also see our{' '}
+                <a href="/disclaimer" className="text-brand-red hover:underline">Disclaimer</a>
+                {' '}and{' '}
+                <a href="/terms" className="text-brand-red hover:underline">Terms of Service</a>.
+              </p>
             </div>
           </div>
           </div>

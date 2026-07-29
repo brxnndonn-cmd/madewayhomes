@@ -29,6 +29,9 @@ export const providerProfiles = sqliteTable('provider_profiles', {
   facebook: text('facebook'),
   instagram: text('instagram'),
   years_in_business: integer('years_in_business'),
+  license_number: text('license_number'),
+  insurance_provider: text('insurance_provider'),
+  insurance_policy_number: text('insurance_policy_number'),
   business_hours: text('business_hours'), // JSON
   approval_status: text('approval_status', { enum: ['pending', 'approved', 'rejected'] }).notNull().default('pending'),
   created_at: text('created_at').notNull().default(sql`(datetime('now'))`),

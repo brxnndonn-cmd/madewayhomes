@@ -66,12 +66,26 @@ function ensureTables() {
       facebook TEXT,
       instagram TEXT,
       years_in_business INTEGER,
+      license_number TEXT,
+      insurance_provider TEXT,
+      insurance_policy_number TEXT,
       business_hours TEXT,
       approval_status TEXT NOT NULL DEFAULT 'pending' CHECK(approval_status IN ('pending', 'approved', 'rejected')),
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // ── Migrate: add columns if they don't exist ─────────────────
+  try {
+    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN license_number TEXT');
+  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try {
+    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_provider TEXT');
+  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
+  try {
+    sqlite.exec('ALTER TABLE provider_profiles ADD COLUMN insurance_policy_number TEXT');
+  } catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
 
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS provider_services (
@@ -162,6 +176,9 @@ const applySchema = z.object({
   facebook: z.string().max(500).optional().nullable(),
   instagram: z.string().max(500).optional().nullable(),
   years_in_business: z.coerce.number().int().positive().optional().nullable(),
+  license_number: z.string().max(100).optional().nullable(),
+  insurance_provider: z.string().max(200).optional().nullable(),
+  insurance_policy_number: z.string().max(100).optional().nullable(),
   description: z.string().min(50, 'Description must be at least 50 characters').max(5000),
   service_categories: z.string().min(1, 'At least one service category is required'), // JSON array string
   service_areas: z.string().min(1, 'At least one service area is required'), // JSON array string
@@ -280,6 +297,9 @@ router.post('/apply', requireAuth, (req: Request, res: Response, next) => {
       facebook: data.facebook || null,
       instagram: data.instagram || null,
       years_in_business: data.years_in_business ?? null,
+      license_number: data.license_number || null,
+      insurance_provider: data.insurance_provider || null,
+      insurance_policy_number: data.insurance_policy_number || null,
       approval_status: 'pending',
     }).returning().get();
 

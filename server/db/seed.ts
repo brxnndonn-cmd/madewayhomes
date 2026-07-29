@@ -83,6 +83,9 @@ async function seed() {
       facebook TEXT,
       instagram TEXT,
       years_in_business INTEGER,
+      license_number TEXT,
+      insurance_provider TEXT,
+      insurance_policy_number TEXT,
       business_hours TEXT,
       approval_status TEXT NOT NULL DEFAULT 'pending',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -351,32 +354,25 @@ async function seed() {
   // ── Create subscription plans ─────────────────────────────────────
   const plans = [
     {
-      name: 'Free',
-      slug: 'free',
+      name: 'Free Listing',
+      slug: 'free-listing',
       price: 0,
-      features: JSON.stringify(['Basic profile listing', 'Directory visibility', 'Up to 5 lead views/month']),
+      features: JSON.stringify(['Basic profile in directory', 'Receive lead notifications', 'Up to 5 photos']),
       sort: 1,
     },
     {
-      name: 'Starter',
-      slug: 'starter',
-      price: 2900,
-      features: JSON.stringify(['Everything in Free', 'Up to 20 lead views/month', 'Priority matching', 'Photo gallery']),
+      name: 'Featured Listing',
+      slug: 'featured-listing',
+      price: 4900,
+      features: JSON.stringify(['Everything in Free', 'Priority placement in search results', 'Highlighted profile with badge', 'Up to 10 photos', 'Featured on category pages']),
       sort: 2,
     },
     {
-      name: 'Growth',
-      slug: 'growth',
-      price: 7900,
-      features: JSON.stringify(['Everything in Starter', 'Unlimited lead views', 'Featured in search results', 'Customer reviews', 'Analytics dashboard']),
+      name: 'Premium Partner',
+      slug: 'premium-partner',
+      price: 9900,
+      features: JSON.stringify(['Everything in Featured', 'Top of search results', 'Featured on homepage', 'Priority lead matching', 'Premium Partner badge', 'Unlimited photos', 'Dedicated support']),
       sort: 3,
-    },
-    {
-      name: 'Featured Partner',
-      slug: 'featured-partner',
-      price: 14900,
-      features: JSON.stringify(['Everything in Growth', 'Top of search results', 'Verified badge', 'Dedicated support', 'Custom landing page', 'Early access to leads']),
-      sort: 4,
     },
   ];
 

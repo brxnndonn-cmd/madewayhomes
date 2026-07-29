@@ -1,5 +1,5 @@
 export default function Terms() {
-  const lastUpdated = '2024';
+  const lastUpdated = '2026';
   const companyName = 'MadeWayHomes';
   const contactEmail = 'hello@madewayhomes.com';
   const stateName = 'North Carolina';
@@ -91,11 +91,17 @@ export default function Terms() {
 
             {/* ── 6. Payments ────────────────────────────── */}
             <div>
-              <h2 className="text-xl font-bold text-brand-black mb-3">6. Payments (Future Feature)</h2>
+              <h2 className="text-xl font-bold text-brand-black mb-3">6. Payments &amp; Future Paid Features</h2>
               <p>
-                In the future, we may introduce paid subscription plans and lead purchasing for providers. 
-                Any payment features will be governed by additional terms presented at the time of purchase. 
-                Currently, the Platform does not process payments.
+                Currently, the Platform does not process payments. In the future, we may introduce paid 
+                subscription plans (such as Featured Listings and Premium Partner tiers) and lead-purchasing 
+                options for providers. Any payment features will be governed by additional terms presented 
+                at the time of purchase. By using the Platform, you acknowledge that paid features may be 
+                introduced and that your continued use does not obligate you to purchase any paid services.
+              </p>
+              <p className="mt-3">
+                See our <a href="/pricing" className="text-brand-red hover:underline">Pricing page</a> for 
+                more information on current and planned plan options.
               </p>
             </div>
 
@@ -183,6 +189,12 @@ export default function Terms() {
                 </a>.
               </p>
               <p className="text-sm mt-2">MadeWayHomes — Lenoir, Caldwell County, {stateName}</p>
+              <p className="text-sm mt-1">
+                Also see our{' '}
+                <a href="/disclaimer" className="text-brand-red hover:underline">Disclaimer</a>
+                {' '}and{' '}
+                <a href="/privacy" className="text-brand-red hover:underline">Privacy Policy</a>.
+              </p>
             </div>
           </div>
           </div>

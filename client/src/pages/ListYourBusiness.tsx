@@ -48,6 +48,9 @@ export default function ListYourBusiness() {
   const [facebook, setFacebook] = useState('');
   const [instagram, setInstagram] = useState('');
   const [yearsInBusiness, setYearsInBusiness] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [insuranceProvider, setInsuranceProvider] = useState('');
+  const [insurancePolicyNumber, setInsurancePolicyNumber] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [areas, setAreas] = useState<ServiceArea[]>([
@@ -226,6 +229,9 @@ export default function ListYourBusiness() {
       if (facebook.trim()) formData.append('facebook', facebook.trim());
       if (instagram.trim()) formData.append('instagram', instagram.trim());
       if (yearsInBusiness) formData.append('years_in_business', yearsInBusiness);
+      if (licenseNumber.trim()) formData.append('license_number', licenseNumber.trim());
+      if (insuranceProvider.trim()) formData.append('insurance_provider', insuranceProvider.trim());
+      if (insurancePolicyNumber.trim()) formData.append('insurance_policy_number', insurancePolicyNumber.trim());
       formData.append('description', description.trim());
       formData.append('service_categories', JSON.stringify(selectedCategories));
       formData.append('service_areas', JSON.stringify(
@@ -500,6 +506,49 @@ export default function ListYourBusiness() {
                     onChange={e => setYearsInBusiness(e.target.value)}
                     placeholder="5"
                     min="0"
+                    disabled={!isLoggedIn}
+                  />
+                </div>
+
+                {/* ── Credentials ──────────────────────────────────── */}
+                <div className="md:col-span-2 pt-2">
+                  <p className="text-sm font-medium text-brand-black mb-3 border-b border-gray-200 pb-1">
+                    🔒 Credentials <span className="text-brand-gray-medium font-normal text-xs">(optional)</span>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-black mb-1">License Number</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={licenseNumber}
+                    onChange={e => setLicenseNumber(e.target.value)}
+                    placeholder="NC-12345"
+                    disabled={!isLoggedIn}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-black mb-1">Insurance Provider</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={insuranceProvider}
+                    onChange={e => setInsuranceProvider(e.target.value)}
+                    placeholder="State Farm, Nationwide, etc."
+                    disabled={!isLoggedIn}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-black mb-1">Insurance Policy Number</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={insurancePolicyNumber}
+                    onChange={e => setInsurancePolicyNumber(e.target.value)}
+                    placeholder="POL-123456789"
                     disabled={!isLoggedIn}
                   />
                 </div>
@@ -830,7 +879,7 @@ export default function ListYourBusiness() {
                   <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
                     Provider Agreement and Terms of Service
                   </a>
-                  . I confirm that the information provided is accurate and that I am authorized to represent this business.
+                  . I understand that MadeWayHomes may introduce paid listing and lead-generation plans in the future and agree to be contacted about these options. I confirm that the information provided is accurate and that I am authorized to represent this business.
                 </span>
               </label>
               {errors.terms && <p className="text-red-500 text-xs mt-1 ml-7">{errors.terms}</p>}

@@ -14,6 +14,7 @@ interface Category {
 interface FormData {
   category_id: string;
   city: string;
+  zip_code: string;
   description: string;
   budget_min: string;
   budget_max: string;
@@ -47,6 +48,7 @@ export default function RequestService() {
   const [formData, setFormData] = useState<FormData>({
     category_id: '',
     city: '',
+    zip_code: '',
     description: '',
     budget_min: '',
     budget_max: '',
@@ -152,7 +154,7 @@ export default function RequestService() {
     const newErrors: FormErrors = {};
 
     if (!formData.category_id) newErrors.category_id = 'Please select a service category';
-    if (!formData.city.trim()) newErrors.city = 'City or ZIP code is required';
+    if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.description.trim()) {
       newErrors.description = 'Job description is required';
     } else if (formData.description.trim().length < 20) {
@@ -273,6 +275,7 @@ export default function RequestService() {
     setFormData({
       category_id: '',
       city: '',
+      zip_code: '',
       description: '',
       budget_min: '',
       budget_max: '',
@@ -480,10 +483,10 @@ export default function RequestService() {
             )}
           </div>
 
-          {/* 2. City / ZIP Code */}
-          <div className="mb-6">
+          {/* 2. City */}
+          <div className="mb-4">
             <label htmlFor="city" className={`block text-sm font-semibold mb-2 ${errors.city ? 'text-red-600' : 'text-brand-black'}`}>
-              City or ZIP Code <span className="text-brand-red">*</span>
+              City <span className="text-brand-red">*</span>
             </label>
             <input
               type="text"
@@ -491,12 +494,29 @@ export default function RequestService() {
               name="city"
               value={formData.city}
               onChange={handleChange}
-              placeholder="Lenoir, NC or 28645"
+              placeholder="Lenoir"
               className={`input-field ${errors.city ? 'border-red-400 focus:ring-red-400' : ''}`}
             />
             {errors.city && (
               <p className="text-red-600 text-xs mt-1.5">{errors.city}</p>
             )}
+          </div>
+
+          {/* 2b. ZIP Code */}
+          <div className="mb-6">
+            <label htmlFor="zip_code" className="block text-sm font-semibold mb-2 text-brand-black">
+              ZIP Code
+            </label>
+            <input
+              type="text"
+              id="zip_code"
+              name="zip_code"
+              value={formData.zip_code}
+              onChange={handleChange}
+              placeholder="28645"
+              maxLength={10}
+              className="input-field"
+            />
           </div>
 
           {/* 3. Job Description */}

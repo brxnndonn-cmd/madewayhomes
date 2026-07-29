@@ -20,6 +20,8 @@ import ProviderProfile from './pages/ProviderProfile';
 import MyRequests from './pages/MyRequests';
 import ProviderDashboard from './pages/ProviderDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Pricing from './pages/Pricing';
+import Disclaimer from './pages/Disclaimer';
 
 export default function App() {
   return (
@@ -37,6 +39,8 @@ export default function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/providers" element={<ProviderDirectory />} />
         <Route path="/providers/:id" element={<ProviderProfile />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/disclaimer" element={<Disclaimer />} />
 
         {/* Auth Pages */}
         <Route path="/login" element={<Login />} />
